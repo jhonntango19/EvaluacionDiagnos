@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación Diagnóstica - CEA Villa Armonía 2027</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome para Iconografía -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js para generación fiel de PDF A4 sin problemas de fuentes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        cea: {
+                            blue: '#0A2540',
+                            blueLight: '#163A5F',
+                            blueDark: '#051526',
+                            gold: '#D4AF37',
+                            goldLight: '#F3E5AB',
+                            goldDark: '#AA8A24',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F4F7FA;
+            color: #1E293B;
+        }
+
+        /* Animaciones suaves */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilos personalizados para radio buttons / opciones */
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover {
+            transform: translateX(4px);
+            border-color: #D4AF37;
+        }
+        .option-selected {
+            background-color: #EFF6FF;
+            border-color: #0A2540 !important;
+            box-shadow: 0 4px 6px -1px rgba(10, 37, 64, 0.1);
+        }
+
+        /* Estilos para impresión directa (Alternativa nativa sin conexión) */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #pdf-report-container, #pdf-report-container * {
+                visibility: visible;
+            }
+            #pdf-report-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cea-gold selection:text-cea-blue">
+
+    <!-- BARRA DE NAVEGACIÓN SUPERIOR -->
+    <header class="bg-cea-blue text-white shadow-lg border-b-4 border-cea-gold sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <!-- Espacio para Logotipo Institucional (SVG Vectorial de Alta Definición) -->
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 shadow-md border-2 border-cea-gold shrink-0" title="Logotipo Institucional CEA Villa Armonía">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="46" fill="#0A2540" stroke="#D4AF37" stroke-width="4"/>
+                        <path d="M55 20 L35 52 L50 52 L45 80 L68 46 L52 46 Z" fill="#D4AF37"/>
+                        <circle cx="50" cy="50" r="36" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 3"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-lg font-extrabold tracking-wide text-white leading-tight">
+                        CENTRO DE EDUCACIÓN ALTERNATIVA VILLA ARMONÍA
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-cea-goldLight font-medium">
+                        <span class="bg-cea-blueLight px-2 py-0.5 rounded border border-cea-gold/40">CEA VILLA ARMONÍA</span>
+                        <span>•</span>
+                        <span>GESTIÓN 2027</span>
+                        <span class="hidden sm:inline">•</span>
+                        <span class="hidden sm:inline">TÉCNICO MEDIO - ELECTRICIDAD INDUSTRIAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info del estudiante activo y botón reiniciar -->
+            <div id="header-student-info" class="hidden flex items-center space-x-3 bg-cea-blueLight/80 px-3 py-1.5 rounded-lg border border-white/10">
+                <div class="text-right hidden md:block">
+                    <p id="header-student-name" class="text-xs font-bold text-white"></p>
+                    <p id="header-student-ci" class="text-[11px] text-cea-goldLight"></p>
+                </div>
+                <button onclick="confirmarReinicio()" class="text-xs bg-red-600/90 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-md font-semibold transition flex items-center gap-1 shadow" title="Reiniciar Evaluación">
+                    <i class="fas fa-rotate-right"></i>
+                    <span class="hidden sm:inline">Reiniciar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- =====================================================================
+             VISTA 1: PANTALLA DE BIENVENIDA
+        ====================================================================== -->
+        <section id="view-welcome" class="fade-in">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                <!-- Banner Institucional -->
+                <div class="bg-gradient-to-r from-cea-blue via-cea-blueLight to-cea-blue p-8 sm:p-12 text-center text-white relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#D4AF37 1.5px, transparent 1.5px); background-size: 24px 24px;"></div>
+                    
+                    <div class="inline-flex items-center gap-2 bg-cea-gold/20 border border-cea-gold text-cea-goldLight px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase mb-4">
+                        <i class="fas fa-bolt"></i> Instrumento: Evaluación Diagnóstica de Capacidades
+                    </div>
+                    
+                    <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 text-white">
+                        ¡BIENVENIDO A TU EVALUACIÓN DIAGNÓSTICA DE CAPACIDADES!
+                    </h2>
+                    <p class="text-cea-gold font-semibold text-sm sm:text-base tracking-wide">
+                        NIVEL: TÉCNICO MEDIO &nbsp;|&nbsp; ÁREA: ELECTRICIDAD INDUSTRIAL &nbsp;|&nbsp; GESTIÓN ACADÉMICA 2027
+                    </p>
+                </div>
+
+                <!-- Contenido Explicativo -->
+                <div class="p-6 sm:p-10 space-y-8">
+                    <div class="max-w-3xl mx-auto text-center space-y-4">
+                        <p class="text-slate-700 text-base sm:text-lg leading-relaxed">
+                            Esta evaluación tiene como finalidad identificar tus <strong>conocimientos, habilidades y capacidades previas</strong> en el área de <strong>Electricidad Industrial</strong>.
+                        </p>
+                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                            Realizarás <strong>cinco pruebas diferentes</strong> que permitirán conocer tu nivel de desarrollo en cada capacidad técnica y socio-productiva.
+                        </p>
+                        <div class="bg-amber-50 border-l-4 border-cea-gold p-4 rounded-r-xl text-left flex items-start gap-3">
+                            <i class="fas fa-lightbulb text-cea-goldDark text-xl mt-0.5"></i>
+                            <p class="text-sm text-slate-800 font-medium">
+                                <strong>Importante:</strong> No se trata de una evaluación para aprobar o reprobar, sino de identificar tus fortalezas y los aspectos que necesitas fortalecer durante tu formación técnica en el CEA Villa Armonía.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tarjetas resumen de las 5 capacidades -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:border-cea-gold transition">
+                            <div class="w-10 h-10 mx-auto bg-cea-blue text-cea-gold rounded-lg flex items-center justify-center mb-2 text-lg">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <h3 class="font-bold text-xs text-cea-blue uppercase">1. Diseño de Esquemas</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Simbología y circuitos</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:border-cea-gold transition">
+                            <div class="w-10 h-10 mx-auto bg-cea-blue text-cea-gold rounded-lg flex items-center justify-center mb-2 text-lg">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <h3 class="font-bold text-xs text-cea-blue uppercase">2. Montaje de Equipos</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Herramientas y seguridad</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:border-cea-gold transition">
+                            <div class="w-10 h-10 mx-auto bg-cea-blue text-cea-gold rounded-lg flex items-center justify-center mb-2 text-lg">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h3 class="font-bold text-xs text-cea-blue uppercase">3. Elaboración de Proyectos</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Planificación y costos</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:border-cea-gold transition">
+                            <div class="w-10 h-10 mx-auto bg-cea-blue text-cea-gold rounded-lg flex items-center justify-center mb-2 text-lg">
+                                <i class="fas fa-drafting-compass"></i>
+                            </div>
+                            <h3 class="font-bold text-xs text-cea-blue uppercase">4. Interpretación de Planos</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Lectura de diagramas</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:border-cea-gold transition sm:col-span-2 lg:col-span-1">
+                            <div class="w-10 h-10 mx-auto bg-cea-blue text-cea-gold rounded-lg flex items-center justify-center mb-2 text-lg">
+                                <i class="fas fa-users-cog"></i>
+                            </div>
+                            <h3 class="font-bold text-xs text-cea-blue uppercase">5. Trabajo Colaborativo</h3>
+                            <p class="text-[11px] text-slate-500 mt-1">Resolución en equipo</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón destacado -->
+                    <div class="text-center pt-4">
+                        <button onclick="irARegistro()" class="inline-flex items-center justify-center gap-3 bg-cea-blue hover:bg-cea-blueLight text-white font-extrabold text-base sm:text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 border-b-4 border-cea-gold cursor-pointer">
+                            <span>COMENZAR EVALUACIÓN</span>
+                            <i class="fas fa-arrow-right text-cea-gold"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             VISTA 2: REGISTRO DE DATOS DEL ESTUDIANTE
+        ====================================================================== -->
+        <section id="view-register" class="hidden fade-in">
+            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="bg-cea-blue px-6 py-5 text-white border-b-4 border-cea-gold flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <i class="fas fa-user-graduate text-cea-gold"></i>
+                            Registro de Datos del Estudiante
+                        </h2>
+                        <p class="text-xs text-slate-300 mt-1">Completa tus datos personales para generar tu informe individual.</p>
+                    </div>
+                    <span class="bg-cea-gold text-cea-blue text-xs font-extrabold px-3 py-1 rounded-full">Paso 1 de 2</span>
+                </div>
+
+                <form id="student-form" onsubmit="guardarRegistro(event)" class="p-6 sm:p-8 space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Apellidos <span class="text-red-600">*</span></label>
+                            <input type="text" id="reg-apellidos" required placeholder="Ej. Mamani Quispe" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-cea-blue focus:border-cea-blue outline-none transition text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Nombres <span class="text-red-600">*</span></label>
+                            <input type="text" id="reg-nombres" required placeholder="Ej. Juan Carlos" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-cea-blue focus:border-cea-blue outline-none transition text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Número de Cédula de Identidad <span class="text-red-600">*</span></label>
+                            <input type="text" id="reg-ci" required placeholder="Ej. 8459210 LP" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-cea-blue focus:border-cea-blue outline-none transition text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Fecha de Evaluación <span class="text-red-600">*</span></label>
+                            <input type="date" id="reg-fecha" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-cea-blue focus:border-cea-blue outline-none transition text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase">Especialidad</label>
+                            <input type="text" id="reg-especialidad" value="Electricidad Industrial" readonly class="w-full bg-transparent font-bold text-cea-blue text-sm mt-0.5 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase">Nivel</label>
+                            <input type="text" id="reg-nivel" value="Técnico Medio" readonly class="w-full bg-transparent font-bold text-cea-blue text-sm mt-0.5 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase">Gestión</label>
+                            <input type="text" id="reg-gestion" value="2027" readonly class="w-full bg-transparent font-bold text-cea-blue text-sm mt-0.5 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <button type="button" onclick="mostrarVista('view-welcome')" class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-100 transition">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-cea-blue hover:bg-cea-blueLight text-white font-bold text-sm shadow-md border-b-4 border-cea-gold transition flex items-center justify-center gap-2 cursor-pointer">
+                            <span>CONTINUAR AL PANEL DE PRUEBAS</span>
+                            <i class="fas fa-chevron-right text-cea-gold"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             VISTA 3: PANEL DE NAVEGACIÓN Y PROGRESO DE LAS 5 CAPACIDADES
+        ====================================================================== -->
+        <section id="view-dashboard" class="hidden fade-in space-y-6">
+            <!-- Resumen de avance general -->
+            <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-cea-blue">Panel de Evaluación Diagnóstica</h2>
+                        <p class="text-sm text-slate-600">Completa las cinco pruebas en orden secuencial. Tu progreso se guarda automáticamente.</p>
+                    </div>
+                    <div class="bg-slate-100 px-4 py-2.5 rounded-xl border border-slate-200 text-right">
+                        <span class="text-xs font-bold text-slate-500 uppercase block">Avance General</span>
+                        <span id="dashboard-progress-text" class="text-lg font-extrabold text-cea-blue">0 de 5 Completadas (0%)</span>
+                    </div>
+                </div>
+                <!-- Barra de progreso general -->
+                <div class="w-full bg-slate-200 rounded-full h-3.5 overflow-hidden">
+                    <div id="dashboard-progress-bar" class="bg-gradient-to-r from-cea-blue to-cea-gold h-3.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Tarjetas de las 5 Capacidades -->
+            <div id="modules-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Se renderiza dinámicamente con JS -->
+            </div>
+
+            <!-- Botón para ver Informe Final (Habilitado solo al completar las 5) -->
+            <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-cea-goldDark flex items-center justify-center text-2xl shrink-0">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-cea-blue text-base">Informe Individual de Resultados</h3>
+                        <p id="final-report-hint" class="text-xs text-slate-500">Debes completar las 5 pruebas diagnósticas para desbloquear tu informe en PDF.</p>
+                    </div>
+                </div>
+                <button id="btn-view-final-results" disabled onclick="mostrarResultadosFinales()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-slate-200 text-slate-400 cursor-not-allowed">
+                    <i class="fas fa-lock" id="btn-final-icon"></i>
+                    <span>VER RESULTADOS E INFORME PDF</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             VISTA 4: INTERFAZ DE EJECUCIÓN DE PRUEBA (MÓDULO ACTIVO)
+        ====================================================================== -->
+        <section id="view-quiz" class="hidden fade-in space-y-6">
+            <!-- Cabecera del Módulo -->
+            <div class="bg-cea-blue text-white rounded-2xl p-6 shadow-lg border-b-4 border-cea-gold">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <span id="quiz-badge" class="bg-cea-gold text-cea-blue text-xs font-extrabold px-3 py-1 rounded-full uppercase">Prueba 1 de 5</span>
+                    <button onclick="volverAlPanel()" class="text-xs text-slate-300 hover:text-white underline flex items-center gap-1">
+                        <i class="fas fa-th-large"></i> Volver al Panel
+                    </button>
+                </div>
+                <h2 id="quiz-title" class="text-xl sm:text-2xl font-extrabold text-white">Nombre de la Capacidad</h2>
+                <p id="quiz-objective" class="text-xs sm:text-sm text-cea-goldLight mt-1"></p>
+                
+                <div class="mt-4 bg-cea-blueDark/60 p-3 rounded-xl border border-white/10 text-xs text-slate-200 flex items-start gap-2">
+                    <i class="fas fa-info-circle text-cea-gold mt-0.5"></i>
+                    <span id="quiz-instructions">Instrucciones de la prueba.</span>
+                </div>
+
+                <!-- Progreso dentro de la prueba -->
+                <div class="mt-5">
+                    <div class="flex justify-between text-xs font-semibold mb-1.5">
+                        <span id="quiz-question-counter">Pregunta 1 de 10</span>
+                        <span id="quiz-answered-counter">0 respondidas</span>
+                    </div>
+                    <div class="w-full bg-cea-blueDark rounded-full h-2.5 overflow-hidden">
+                        <div id="quiz-progress-bar" class="bg-cea-gold h-2.5 rounded-full transition-all duration-300" style="width: 10%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor de la Pregunta Actual -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
+                    <span id="q-criterion" class="text-xs font-bold uppercase tracking-wider text-cea-blue bg-blue-50 px-3 py-1 rounded-md border border-blue-200">
+                        Criterio de evaluación
+                    </span>
+                    <span id="q-points" class="text-xs font-extrabold text-cea-goldDark bg-amber-50 px-3 py-1 rounded-md border border-amber-200">
+                        Valor: 10 puntos
+                    </span>
+                </div>
+
+                <!-- Enunciado -->
+                <h3 id="q-text" class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed mb-5">
+                    Texto de la pregunta...
+                </h3>
+
+                <!-- Diagrama / Imagen SVG Didáctica (si aplica) -->
+                <div id="q-visual-container" class="hidden mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
+                    <div id="q-svg-content" class="w-full max-w-lg flex justify-center"></div>
+                    <p id="q-svg-caption" class="text-xs text-slate-500 mt-2 italic text-center"></p>
+                </div>
+
+                <!-- Opciones de respuesta -->
+                <div id="q-options-container" class="space-y-3">
+                    <!-- Generado dinámicamente -->
+                </div>
+
+                <!-- Navegación entre preguntas -->
+                <div class="mt-8 pt-5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <button id="btn-prev-q" onclick="preguntaAnterior()" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+
+                    <!-- Mapa rápido de preguntas -->
+                    <div id="q-dots-map" class="flex flex-wrap justify-center gap-1.5">
+                        <!-- Puntos numerados -->
+                    </div>
+
+                    <button id="btn-next-q" onclick="preguntaSiguiente()" class="px-6 py-2.5 rounded-xl bg-cea-blue hover:bg-cea-blueLight text-white font-bold text-sm transition flex items-center gap-2 shadow">
+                        <span>Siguiente</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <button id="btn-finish-quiz" onclick="solicitarEntregaPrueba()" class="hidden px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm transition flex items-center gap-2 shadow-md border-b-4 border-emerald-800 cursor-pointer">
+                        <i class="fas fa-check-circle"></i> <span>FINALIZAR PRUEBA</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             VISTA 5: RESULTADOS GENERALES E INFORME INDIVIDUAL A4
+        ====================================================================== -->
+        <section id="view-results" class="hidden fade-in space-y-8">
+            <!-- Banner de Felicitación -->
+            <div class="bg-gradient-to-r from-cea-blue via-cea-blueLight to-cea-blue rounded-2xl p-8 text-center text-white shadow-xl border-b-4 border-cea-gold no-print">
+                <div class="w-16 h-16 bg-cea-gold text-cea-blue rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">
+                    <i class="fas fa-award"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    ¡FELICIDADES! HAS COMPLETADO TU EVALUACIÓN DIAGNÓSTICA.
+                </h2>
+                <p class="text-cea-goldLight text-sm sm:text-base mt-2 max-w-2xl mx-auto">
+                    A continuación se presenta tu perfil diagnóstico detallado por capacidades en el área de Electricidad Industrial – Gestión 2027.
+                </p>
+
+                <!-- Botones de Acción (PDF e Imprimir) -->
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-4">
+                    <button onclick="descargarPDF()" id="btn-download-pdf" class="px-6 py-3.5 rounded-xl bg-cea-gold hover:bg-cea-goldDark text-cea-blue font-extrabold text-sm shadow-lg transition flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-file-pdf text-lg"></i>
+                        <span>DESCARGAR RESULTADOS EN PDF</span>
+                    </button>
+                    <button onclick="window.print()" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-sm transition flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-print"></i>
+                        <span>IMPRIMIR INFORME</span>
+                    </button>
+                    <button onclick="volverAlPanel()" class="px-5 py-3.5 rounded-xl bg-cea-blueDark hover:bg-slate-900 text-slate-300 font-semibold text-sm transition flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Volver al Panel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 DOCUMENTO FORMAL A4 (Se exporta a PDF y se imprime)
+            ================================================================== -->
+            <div id="pdf-report-container" class="bg-white rounded-xl shadow-xl border border-slate-300 max-w-4xl mx-auto p-6 sm:p-10 text-slate-800">
+                
+                <!-- ENCABEZADO INSTITUCIONAL A4 -->
+                <div class="border-b-4 border-cea-blue pb-4 mb-6 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 shrink-0">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle cx="50" cy="50" r="46" fill="#0A2540" stroke="#D4AF37" stroke-width="5"/>
+                                <path d="M55 20 L35 52 L50 52 L45 80 L68 46 L52 46 Z" fill="#D4AF37"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-base sm:text-lg font-extrabold text-cea-blue leading-tight">
+                                CENTRO DE EDUCACIÓN ALTERNATIVA VILLA ARMONÍA
+                            </h1>
+                            <h2 class="text-xs sm:text-sm font-bold text-cea-goldDark tracking-wide">
+                                EVALUACIÓN DIAGNÓSTICA DE CAPACIDADES – GESTIÓN 2027
+                            </h2>
+                            <p class="text-xs text-slate-600 font-semibold mt-0.5">
+                                NIVEL: TÉCNICO MEDIO &nbsp;|&nbsp; ÁREA: ELECTRICIDAD INDUSTRIAL
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <span class="inline-block bg-cea-blue text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase">Informe Oficial</span>
+                        <p class="text-[11px] text-slate-500 mt-1" id="doc-codigo">COD: CEA-2027-DIAG</p>
+                    </div>
+                </div>
+
+                <!-- DATOS DEL ESTUDIANTE -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+                    <h3 class="text-xs font-extrabold text-cea-blue uppercase tracking-wider border-b border-slate-200 pb-1.5 mb-3">
+                        I. Datos del Estudiante
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-xs sm:text-sm">
+                        <div><span class="font-bold text-slate-600">Apellidos y Nombres:</span> <span id="rep-nombre" class="font-semibold text-slate-900"></span></div>
+                        <div><span class="font-bold text-slate-600">Cédula de Identidad:</span> <span id="rep-ci" class="font-semibold text-slate-900"></span></div>
+                        <div><span class="font-bold text-slate-600">Especialidad:</span> <span id="rep-especialidad" class="font-semibold text-slate-900">Electricidad Industrial</span></div>
+                        <div><span class="font-bold text-slate-600">Fecha de Evaluación:</span> <span id="rep-fecha" class="font-semibold text-slate-900"></span></div>
+                    </div>
+                </div>
+
+                <!-- TABLA DE RESULTADOS POR CAPACIDAD -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-extrabold text-cea-blue uppercase tracking-wider mb-2">
+                        II. Resultados por Capacidad Evaluada
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse border border-slate-300 text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-cea-blue text-white">
+                                    <th class="border border-slate-300 px-3 py-2 text-center w-10">N.º</th>
+                                    <th class="border border-slate-300 px-3 py-2">Capacidad Evaluada</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center">Puntuación Obtenida</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center">Puntuación Máxima</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center">Porcentaje</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center">Nivel de Desarrollo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-table-body">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-amber-50 font-extrabold text-cea-blue">
+                                    <td colspan="2" class="border border-slate-300 px-3 py-2.5 text-right uppercase">Promedio General:</td>
+                                    <td id="rep-promedio-pts" class="border border-slate-300 px-3 py-2.5 text-center text-base">0.00</td>
+                                    <td class="border border-slate-300 px-3 py-2.5 text-center">100</td>
+                                    <td id="rep-promedio-pct" class="border border-slate-300 px-3 py-2.5 text-center">0.00%</td>
+                                    <td id="rep-promedio-nivel" class="border border-slate-300 px-3 py-2.5 text-center">ED</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Leyenda de Escala de Valoración -->
+                    <div class="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                        <span class="font-bold">Escala de Valoración:</span>
+                        <span><strong>DP</strong> (Desarrollo Pleno: 90–100 pts)</span>
+                        <span>•</span>
+                        <span><strong>DO</strong> (Desarrollo Óptimo: 75–89 pts)</span>
+                        <span>•</span>
+                        <span><strong>DA</strong> (Desarrollo Aceptable: 51–74 pts)</span>
+                        <span>•</span>
+                        <span><strong>ED</strong> (En Desarrollo: 0–50 pts)</span>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO COMPARATIVO DE LAS CINCO CAPACIDADES -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-extrabold text-cea-blue uppercase tracking-wider mb-2">
+                        III. Perfil Gráfico de Desarrollo de Capacidades
+                    </h3>
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                        <div class="w-full h-56 flex items-center justify-center">
+                            <canvas id="resultsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANÁLISIS PERSONALIZADO DE RESULTADOS -->
+                <div class="mb-6 space-y-3">
+                    <h3 class="text-xs font-extrabold text-cea-blue uppercase tracking-wider border-b border-slate-200 pb-1">
+                        IV. Análisis Individual y Orientación Pedagógica
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3.5">
+                            <h4 class="text-xs font-extrabold text-emerald-900 uppercase flex items-center gap-1.5 mb-1.5">
+                                <i class="fas fa-star text-emerald-600"></i> Fortalezas Identificadas
+                            </h4>
+                            <ul id="rep-fortalezas" class="text-xs text-slate-700 space-y-1 list-disc list-inside"></ul>
+                        </div>
+
+                        <div class="bg-amber-50/70 border border-amber-200 rounded-lg p-3.5">
+                            <h4 class="text-xs font-extrabold text-amber-900 uppercase flex items-center gap-1.5 mb-1.5">
+                                <i class="fas fa-arrow-up-right-dots text-amber-600"></i> Capacidades a Fortalecer
+                            </h4>
+                            <ul id="rep-debilidades" class="text-xs text-slate-700 space-y-1 list-disc list-inside"></ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/60 border border-blue-200 rounded-lg p-3.5">
+                        <h4 class="text-xs font-extrabold text-cea-blue uppercase flex items-center gap-1.5 mb-2">
+                            <i class="fas fa-compass text-cea-blue"></i> Recomendaciones de Aprendizaje
+                        </h4>
+                        <ul id="rep-recomendaciones" class="text-xs text-slate-700 space-y-1.5"></ul>
+                    </div>
+                </div>
+
+                <!-- CIERRE DEL DOCUMENTO Y FIRMAS -->
+                <div class="border-t-2 border-slate-200 pt-4 mt-6">
+                    <p class="text-xs italic text-slate-600 text-center bg-slate-50 p-3 rounded border border-slate-200 mb-6">
+                        "Esta evaluación diagnóstica tiene como finalidad identificar los conocimientos, habilidades y capacidades previas del estudiante, para orientar y fortalecer su proceso de formación técnica durante la gestión 2027."
+                    </p>
+
+                    <div class="text-xs text-slate-600 mb-10">
+                        <span class="font-bold">Fecha de emisión del informe:</span> <span id="rep-fecha-emision"></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8 pt-6 text-center text-xs">
+                        <div>
+                            <div class="border-t border-slate-400 w-4/5 mx-auto pt-1.5 font-bold text-slate-800">
+                                FIRMA DEL ESTUDIANTE
+                            </div>
+                            <p id="rep-firma-estudiante" class="text-[11px] text-slate-500 mt-0.5"></p>
+                        </div>
+                        <div>
+                            <div class="border-t border-slate-400 w-4/5 mx-auto pt-1.5 font-bold text-slate-800">
+                                FIRMA DEL DOCENTE EVALUADOR
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Área: Electricidad Industrial – CEA Villa Armonía</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="bg-cea-blueDark text-slate-400 text-xs py-5 border-t border-cea-blueLight no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-1">
+            <p class="font-semibold text-slate-300">CENTRO DE EDUCACIÓN ALTERNATIVA VILLA ARMONÍA – GESTIÓN ACADÉMICA 2027</p>
+            <p>Plataforma de Evaluación Diagnóstica Interactiva • Nivel Técnico Medio • Especialidad Electricidad Industrial</p>
+        </div>
+    </footer>
+
+    <!-- =========================================================================
+         MODAL PERSONALIZADO (Sin uso de alert() ni confirm() nativos)
+    ========================================================================== -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden fade-in">
+            <div id="modal-header" class="bg-cea-blue px-6 py-4 text-white flex items-center gap-3 border-b-4 border-cea-gold">
+                <i id="modal-icon" class="fas fa-exclamation-triangle text-cea-gold text-xl"></i>
+                <h3 id="modal-title" class="font-bold text-base">Confirmación</h3>
+            </div>
+            <div class="p-6">
+                <p id="modal-message" class="text-sm text-slate-700 leading-relaxed"></p>
+                <div id="modal-actions" class="mt-6 flex justify-end gap-3">
+                    <button id="modal-btn-cancel" onclick="cerrarModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-100 transition">
+                        Cancelar
+                    </button>
+                    <button id="modal-btn-confirm" class="px-5 py-2 rounded-lg bg-cea-blue text-white text-xs font-bold hover:bg-cea-blueLight transition shadow">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         LÓGICA DE LA APLICACIÓN (BANCO DE PREGUNTAS, SVG, CÁLCULOS, PDF)
+    ========================================================================== -->
+    <script>
+        /* =====================================================================
+           1. BANCO DE DIAGRAMAS SVG DIDÁCTICOS (100% Autocontenido y sin internet)
+        ====================================================================== */
+        const DIAGRAMS = {
+            // Símbolo de Contactor Trifásico / Bobina
+            bobinaContactor: `
+                <svg viewBox="0 0 240 120" class="w-56 h-28 bg-white rounded border border-slate-200 p-2">
+                    <line x1="120" y1="10" x2="120" y2="40" stroke="#0A2540" stroke-width="3"/>
+                    <rect x="85" y="40" width="70" height="40" fill="none" stroke="#0A2540" stroke-width="3"/>
+                    <line x1="120" y1="80" x2="120" y2="110" stroke="#0A2540" stroke-width="3"/>
+                    <text x="62" y="35" font-size="14" font-weight="bold" fill="#0A2540">A1</text>
+                    <text x="62" y="98" font-size="14" font-weight="bold" fill="#0A2540">A2</text>
+                    <text x="165" y="65" font-size="14" font-weight="bold" fill="#D4AF37">KM1</text>
+                </svg>`,
+            // Relé Térmico
+            releTermico: `
+                <svg viewBox="0 0 240 120" class="w-56 h-28 bg-white rounded border border-slate-200 p-2">
+                    <line x1="60" y1="10" x2="60" y2="110" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="120" y1="10" x2="120" y2="110" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="180" y1="10" x2="180" y2="110" stroke="#0A2540" stroke-width="2.5"/>
+                    <polyline points="50,45 70,45 70,75 50,75" fill="none" stroke="#DC2626" stroke-width="3"/>
+                    <polyline points="110,45 130,45 130,75 110,75" fill="none" stroke="#DC2626" stroke-width="3"/>
+                    <polyline points="170,45 190,45 190,75 170,75" fill="none" stroke="#DC2626" stroke-width="3"/>
+                    <text x="198" y="65" font-size="14" font-weight="bold" fill="#0A2540">F2</text>
+                </svg>`,
+            // Circuito de Enclavamiento (Autoalimentación)
+            circuitoEnclavamiento: `
+                <svg viewBox="0 0 320 180" class="w-72 h-44 bg-white rounded border border-slate-200 p-2">
+                    <line x1="30" y1="20" x2="280" y2="20" stroke="#DC2626" stroke-width="3"/>
+                    <text x="10" y="25" font-size="12" font-weight="bold" fill="#DC2626">L1</text>
+                    <!-- Pulsador Paro S0 (NC) -->
+                    <line x1="80" y1="20" x2="80" y2="45" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="70" y1="45" x2="90" y2="45" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="88" y1="42" x2="88" y2="68" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="80" y1="68" x2="80" y2="85" stroke="#0A2540" stroke-width="2"/>
+                    <text x="45" y="60" font-size="11" font-weight="bold">S0 (NC)</text>
+                    <!-- Pulsador Marcha S1 (NA) -->
+                    <line x1="80" y1="85" x2="80" y2="100" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="68" y1="100" x2="80" y2="122" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="80" y1="122" x2="80" y2="135" stroke="#0A2540" stroke-width="2"/>
+                    <text x="35" y="115" font-size="11" font-weight="bold">S1 (NA)</text>
+                    <!-- Contacto Auxiliar Paralelo (¿?) -->
+                    <line x1="80" y1="85" x2="155" y2="85" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="155" y1="85" x2="155" y2="100" stroke="#0A2540" stroke-width="2"/>
+                    <rect x="138" y="98" width="34" height="24" fill="#FEF3C7" stroke="#D4AF37" stroke-width="2"/>
+                    <text x="148" y="114" font-size="12" font-weight="bold" fill="#0A2540">¿?</text>
+                    <line x1="155" y1="122" x2="155" y2="135" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="80" y1="135" x2="155" y2="135" stroke="#0A2540" stroke-width="2"/>
+                    <!-- Bobina KM1 -->
+                    <rect x="65" y="142" width="30" height="18" fill="none" stroke="#0A2540" stroke-width="2"/>
+                    <text x="102" y="155" font-size="11" font-weight="bold">KM1</text>
+                    <line x1="80" y1="135" x2="80" y2="142" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="80" y1="160" x2="80" y2="170" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="30" y1="170" x2="280" y2="170" stroke="#2563EB" stroke-width="3"/>
+                    <text x="10" y="174" font-size="12" font-weight="bold" fill="#2563EB">N</text>
+                </svg>`,
+            // Disyuntor Magnetotérmico
+            disyuntor: `
+                <svg viewBox="0 0 220 120" class="w-52 h-28 bg-white rounded border border-slate-200 p-2">
+                    <line x1="110" y1="10" x2="110" y2="40" stroke="#0A2540" stroke-width="3"/>
+                    <line x1="104" y1="34" x2="116" y2="46" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="116" y1="34" x2="104" y2="46" stroke="#0A2540" stroke-width="2.5"/>
+                    <line x1="92" y1="45" x2="110" y2="80" stroke="#0A2540" stroke-width="3"/>
+                    <line x1="110" y1="80" x2="110" y2="110" stroke="#0A2540" stroke-width="3"/>
+                    <text x="130" y="65" font-size="14" font-weight="bold" fill="#0A2540">Q1</text>
+                </svg>`,
+            // Plano Unifilar Vivienda / Taller
+            planoUnifilar: `
+                <svg viewBox="0 0 360 150" class="w-full max-w-md h-36 bg-white rounded border border-slate-200 p-2">
+                    <!-- Acometida y Medidor -->
+                    <rect x="15" y="55" width="35" height="35" fill="#EFF6FF" stroke="#0A2540" stroke-width="2"/>
+                    <text x="23" y="77" font-size="12" font-weight="bold" fill="#0A2540">kWh</text>
+                    <line x1="50" y1="72" x2="95" y2="72" stroke="#0A2540" stroke-width="2.5"/>
+                    <!-- Interruptor General -->
+                    <rect x="95" y="55" width="40" height="35" fill="#FEF3C7" stroke="#D4AF37" stroke-width="2"/>
+                    <text x="103" y="77" font-size="11" font-weight="bold">IGA</text>
+                    <line x1="135" y1="72" x2="180" y2="72" stroke="#0A2540" stroke-width="2.5"/>
+                    <!-- Barra distribución -->
+                    <line x1="180" y1="25" x2="180" y2="125" stroke="#0A2540" stroke-width="4"/>
+                    <!-- Circuito 1 Iluminación -->
+                    <line x1="180" y1="35" x2="245" y2="35" stroke="#0A2540" stroke-width="2"/>
+                    <circle cx="260" cy="35" r="12" fill="none" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="252" y1="27" x2="268" y2="43" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="268" y1="27" x2="252" y2="43" stroke="#0A2540" stroke-width="2"/>
+                    <text x="280" y="39" font-size="11" font-weight="bold">C1 (1.5 mm²)</text>
+                    <!-- Circuito 2 Tomas -->
+                    <line x1="180" y1="75" x2="245" y2="75" stroke="#0A2540" stroke-width="2"/>
+                    <path d="M250,65 A10,10 0 0,1 250,85" fill="none" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="260" y1="75" x2="272" y2="75" stroke="#0A2540" stroke-width="2"/>
+                    <text x="280" y="79" font-size="11" font-weight="bold">C2 (2.5 mm²)</text>
+                    <!-- Circuito 3 Fuerza -->
+                    <line x1="180" y1="115" x2="245" y2="115" stroke="#0A2540" stroke-width="2"/>
+                    <circle cx="260" cy="115" r="12" fill="#EFF6FF" stroke="#0A2540" stroke-width="2"/>
+                    <text x="255" y="119" font-size="11" font-weight="bold">M</text>
+                    <text x="280" y="119" font-size="11" font-weight="bold">C3 (4.0 mm²)</text>
+                </svg>`,
+            // Arranque Estrella Triángulo
+            estrellaTriangulo: `
+                <svg viewBox="0 0 320 150" class="w-72 h-36 bg-white rounded border border-slate-200 p-2">
+                    <text x="15" y="20" font-size="11" font-weight="bold" fill="#0A2540">CIRCUITO DE FUERZA (MOTOR TRIFÁSICO)</text>
+                    <line x1="60" y1="30" x2="60" y2="110" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="100" y1="30" x2="100" y2="110" stroke="#0A2540" stroke-width="2"/>
+                    <line x1="140" y1="30" x2="140" y2="110" stroke="#0A2540" stroke-width="2"/>
+                    <rect x="48" y="50" width="104" height="25" fill="#EFF6FF" stroke="#0A2540" stroke-width="2"/>
+                    <text x="82" y="67" font-size="11" font-weight="bold">KM1</text>
+                    <circle cx="100" cy="125" r="18" fill="#FEF3C7" stroke="#0A2540" stroke-width="2"/>
+                    <text x="89" y="129" font-size="11" font-weight="bold">M 3~</text>
+                    <!-- Contactores auxiliares Y / D -->
+                    <rect x="190" y="50" width="45" height="25" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/>
+                    <text x="200" y="67" font-size="11" font-weight="bold">KM2</text>
+                    <rect x="250" y="50" width="45" height="25" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+                    <text x="260" y="67" font-size="11" font-weight="bold">KM3</text>
+                    <text x="192" y="95" font-size="10" fill="#475569">KM2 y KM3 nunca</text>
+                    <text x="192" y="108" font-size="10" fill="#475569">actúan juntos.</text>
+                </svg>`
+        };
+
+        /* =====================================================================
+           2. DEFINICIÓN DE LAS 5 PRUEBAS DIAGNÓSTICAS (100 PUNTOS EXACTOS C/U)
+        ====================================================================== */
+        const MODULES = [
+            {
+                id: 'esquemas',
+                numero: 1,
+                nombre: 'Diseño de Esquemas',
+                icono: 'fa-project-diagram',
+                objetivo: 'Evaluar la capacidad para reconocer, representar y diseñar esquemas eléctricos utilizando simbología técnica normalizada (IEC).',
+                instrucciones: 'Lee cuidadosamente cada enunciado, analiza los diagramas eléctricos presentados y selecciona la respuesta técnicamente correcta.',
+                recomendacionBase: 'Reforzar el reconocimiento de simbología normalizada IEC y la representación lógica de circuitos de mando y fuerza.',
+                preguntas: [
+                    // Criterio 1: Reconocimiento de simbología eléctrica (20 pts: 2 preguntas x 10 pts)
+                    {
+                        criterio: 'Reconocimiento de simbología eléctrica',
+                        puntos: 10,
+                        texto: 'Observa el siguiente símbolo normalizado IEC con bornes A1 y A2. ¿Qué elemento representa en un esquema de automatismo?',
+                        svg: DIAGRAMS.bobinaContactor,
+                        caption: 'Figura 1.1: Símbolo eléctrico con terminales A1 - A2.',
+                        opciones: [
+                            'La bobina de accionamiento de un contactor o relé electromagnético.',
+                            'Un interruptor termomagnético unipolar de protección.',
+                            'Una resistencia calefactora trifásica.',
+                            'Un pulsador de parada de emergencia con enclavamiento.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Reconocimiento de simbología eléctrica',
+                        puntos: 10,
+                        texto: 'Identifica el dispositivo de protección representado en la siguiente figura:',
+                        svg: DIAGRAMS.releTermico,
+                        caption: 'Figura 1.2: Elemento de protección en circuito de fuerza.',
+                        opciones: [
+                            'Interruptor diferencial residual.',
+                            'Relé térmico de protección contra sobrecargas.',
+                            'Transformador de aislamiento monofásico.',
+                            'Seccionador fusible bajo carga.'
+                        ],
+                        correcta: 1
+                    },
+                    // Criterio 2: Identificación de componentes eléctricos (15 pts: 1 de 8 pts + 1 de 7 pts)
+                    {
+                        criterio: 'Identificación de componentes eléctricos',
+                        puntos: 8,
+                        texto: '¿Cuál es la función principal de los contactos identificados con la numeración 13 y 14 en un contactor auxiliar?',
+                        opciones: [
+                            'Actuar como contacto Normalmente Abierto (NA/NO) para señalización o enclavamiento.',
+                            'Conectar las fases principales de potencia L1 y T1 hacia el motor.',
+                            'Actuar como contacto Normalmente Cerrado (NC) de disparo térmico.',
+                            'Conectar la puesta a tierra de protección del tablero.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Identificación de componentes eléctricos',
+                        puntos: 7,
+                        texto: 'En un esquema eléctrico bajo norma IEC, ¿qué letra identificativa se asigna por estándar a los motores eléctricos?',
+                        opciones: [
+                            'Letra K',
+                            'Letra Q',
+                            'Letra M',
+                            'Letra S'
+                        ],
+                        correcta: 2
+                    },
+                    // Criterio 3: Representación de circuitos eléctricos (25 pts: 1 de 13 pts + 1 de 12 pts)
+                    {
+                        criterio: 'Representación de circuitos eléctricos',
+                        puntos: 13,
+                        texto: 'Analiza el circuito de arranque directo con pulsadores S0 y S1. Para que el contactor KM1 permanezca energizado al soltar el pulsador de marcha S1, ¿qué componente debe colocarse en el recuadro "¿?"?',
+                        svg: DIAGRAMS.circuitoEnclavamiento,
+                        caption: 'Figura 1.3: Esquema de mando de arranque directo.',
+                        opciones: [
+                            'Un contacto auxiliar Normalmente Abierto (13-14) del mismo contactor KM1.',
+                            'Un contacto auxiliar Normalmente Cerrado (21-22) del contactor KM1.',
+                            'Una lámpara piloto de señalización en serie.',
+                            'Un pulsador de parada de emergencia normalmente abierto.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Representación de circuitos eléctricos',
+                        puntos: 12,
+                        texto: 'Verdadero o Falso: En un esquema de arranque directo de un motor trifásico, el circuito de fuerza y el circuito de mando deben dibujarse siempre con el mismo calibre de conductor porque transportan la misma corriente.',
+                        opciones: [
+                            'Falso: El circuito de fuerza conduce la corriente nominal del motor y el de mando solo la corriente de control de bobinas y pilotos.',
+                            'Verdadero: Ambos circuitos requieren conductores de igual sección por normativa.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 4: Organización y conexión lógica de componentes (20 pts: 2 preguntas x 10 pts)
+                    {
+                        criterio: 'Organización y conexión lógica de componentes',
+                        puntos: 10,
+                        texto: 'Si deseas diseñar un esquema donde una lámpara piloto roja indique que un motor se ha detenido por sobrecarga, ¿a qué bornes del relé térmico F2 debes conectarla?',
+                        opciones: [
+                            'A los bornes 97 - 98 (contacto Normalmente Abierto de disparo térmico).',
+                            'A los bornes 95 - 96 (contacto Normalmente Cerrado de mando).',
+                            'Directamente en paralelo con los bornes de fuerza T1 y T2.',
+                            'Entre el borne A1 del contactor y el neutro.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Organización y conexión lógica de componentes',
+                        puntos: 10,
+                        texto: 'En el diseño lógico de un circuito de inversión de giro de un motor trifásico, ¿por qué se incluye un enclavamiento eléctrico entre KM1 y KM2?',
+                        opciones: [
+                            'Para evitar un cortocircuito entre fases si ambos contactores se activan simultáneamente.',
+                            'Para aumentar la velocidad nominal del motor en un 50%.',
+                            'Para reducir el consumo de energía de la bobina de control.',
+                            'Para permitir que el motor gire en ambos sentidos al mismo tiempo.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 5: Claridad y presentación de esquemas (20 pts: 2 preguntas x 10 pts)
+                    {
+                        criterio: 'Claridad y presentación de esquemas',
+                        puntos: 10,
+                        texto: 'En la representación de esquemas desarrollados de mando, ¿cuál es el orden correcto de ubicación de los elementos desde la línea superior (L1) hacia la inferior (N)?',
+                        opciones: [
+                            'Protección de mando → Contactos de disparo térmico → Pulsador de paro → Pulsador de marcha → Bobina.',
+                            'Bobina → Pulsador de marcha → Pulsador de paro → Protección de mando.',
+                            'Pulsador de marcha → Bobina → Protección de mando → Pulsador de paro.',
+                            'El orden vertical no afecta la lectura ni la seguridad del esquema.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Claridad y presentación de esquemas',
+                        puntos: 10,
+                        texto: 'Para garantizar la claridad técnica en un plano esquemático, ¿cómo se representan los cruces de conductores que NO tienen conexión eléctrica entre sí?',
+                        opciones: [
+                            'Mediante líneas que se cruzan limpiamente sin punto de unión (nodo) en la intersección.',
+                            'Colocando un punto grueso relleno en cada intersección de líneas.',
+                            'Dibujando una flecha indicando el sentido de la corriente en el cruce.',
+                            'Interrumpiendo el esquema y continuando en otra hoja sin referencia.'
+                        ],
+                        correcta: 0
+                    }
+                ]
+            },
+
+            {
+                id: 'montaje',
+                numero: 2,
+                nombre: 'Montaje de Equipos',
+                icono: 'fa-tools',
+                objetivo: 'Evaluar los conocimientos previos sobre herramientas, materiales, equipos, conexiones y procedimientos seguros de montaje eléctrico.',
+                instrucciones: 'Analiza cada situación técnica de taller y selecciona el procedimiento, herramienta o norma de seguridad correcta.',
+                recomendacionBase: 'Fortalecer los conocimientos sobre selección de herramientas aisladas, procedimientos de montaje en tablero y aplicación estricta de normas de seguridad eléctrica.',
+                preguntas: [
+                    // Criterio 1: Reconocimiento de herramientas, materiales y equipos (15 pts: 8 + 7)
+                    {
+                        criterio: 'Reconocimiento de herramientas, materiales y equipos',
+                        puntos: 8,
+                        texto: '¿Qué herramienta es indispensable para verificar con precisión que los tornillos de potencia de un contactor queden ajustados según el torque especificado por el fabricante?',
+                        opciones: [
+                            'Destornillador dinamométrico aislado.',
+                            'Alicate universal de corte lateral.',
+                            'Llave inglesa ajustable metálica sin aislamiento.',
+                            'Crimpadora hidráulica de terminales.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Reconocimiento de herramientas, materiales y equipos',
+                        puntos: 7,
+                        texto: 'Para fijar contactores, relés e interruptores termomagnéticos dentro de un tablero metálico industrial de manera estandarizada, se utiliza:',
+                        opciones: [
+                            'Riel DIN simétrico de 35 mm.',
+                            'Canaleta ranurada de PVC de 20x20 mm.',
+                            'Tubo conduit rígido galvanizado.',
+                            'Cinta aislante autofundente.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 2: Interpretación del procedimiento de montaje (20 pts: 10 + 10)
+                    {
+                        criterio: 'Interpretación del procedimiento de montaje',
+                        puntos: 10,
+                        texto: '¿Cuál es la secuencia lógica correcta para realizar el montaje de un tablero de control industrial?',
+                        opciones: [
+                            '1. Trazado y fijación de rieles/canaletas → 2. Montaje de aparatos → 3. Cableado de fuerza y mando → 4. Verificación y pruebas sin tensión.',
+                            '1. Cableado de mando → 2. Energización del tablero → 3. Fijación de rieles DIN → 4. Montaje de contactores.',
+                            '1. Conexión del motor → 2. Prueba con carga → 3. Etiquetado de cables → 4. Fijación de protecciones.',
+                            '1. Perforación de puertas → 2. Energización directa → 3. Instalación de fusibles.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Interpretación del procedimiento de montaje',
+                        puntos: 10,
+                        texto: 'Al cablear conductores flexibles (multifilares) hacia borneras de tornillo en un tablero industrial, ¿qué práctica técnica garantiza una conexión firme y evita hilos sueltos?',
+                        opciones: [
+                            'Utilizar punteras huecas (terminales tubulares) prensadas con crimpadora.',
+                            'Estaño soldado directamente en la punta del cable antes de apretar el tornillo.',
+                            'Enrollar el cobre alrededor del tornillo sin pelar completamente el aislante.',
+                            'Introducir dos conductores de distinto calibre en el mismo borne sin terminal.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 3: Conocimientos sobre conexiones eléctricas (25 pts: 13 + 12)
+                    {
+                        criterio: 'Conocimientos sobre conexiones eléctricas',
+                        puntos: 13,
+                        texto: 'Tienes un motor trifásico cuya placa indica 220V Δ / 380V Y. Si la red trifásica disponible en el taller es de 380V entre fases, ¿cómo debes conectar la caja de bornes del motor?',
+                        opciones: [
+                            'En conexión Estrella (Y), puenteando los bornes W2, U2 y V2.',
+                            'En conexión Triángulo (Δ), puenteando U1-W2, V1-U2 y W1-V2.',
+                            'Conectando únicamente dos fases y el neutro.',
+                            'En conexión directa sin relé térmico.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Conocimientos sobre conexiones eléctricas',
+                        puntos: 12,
+                        texto: 'Durante la revisión de un montaje, observas que la alimentación de entrada llega por los bornes inferiores (2, 4, 6) del interruptor termomagnético en lugar de los superiores (1, 3, 5), sin estar indicado en el plano. ¿Qué riesgo genera esta inversión?',
+                        opciones: [
+                            'Puede confundir al personal de mantenimiento al asumir que los bornes inferiores están sin tensión al abrir el interruptor.',
+                            'Hace que el motor gire automáticamente en sentido inverso.',
+                            'Duplica el voltaje de salida en los bornes superiores.',
+                            'No representa ningún riesgo ni requiere señalización.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 4: Aplicación de normas de seguridad (25 pts: 13 + 12)
+                    {
+                        criterio: 'Aplicación de normas de seguridad',
+                        puntos: 13,
+                        texto: 'Antes de intervenir o modificar un circuito en un tablero eléctrico industrial, ¿cuál es la primera regla de oro de seguridad eléctrica que debes aplicar?',
+                        opciones: [
+                            'Desconectar de forma visible todas las fuentes de tensión (corte efectivo).',
+                            'Colocarse guantes de tela común y tocar los cables rápidamente.',
+                            'Medir la corriente con pinza amperimétrica mientras se desconectan los bornes.',
+                            'Avisar verbalmente al compañero sin bloquear el interruptor principal.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Aplicación de normas de seguridad',
+                        puntos: 12,
+                        texto: '¿Qué Equipo de Protección Personal (EPP) básico es obligatorio al realizar maniobras de verificación de tensión en tableros industriales?',
+                        opciones: [
+                            'Guantes dieléctricos certificados, gafas de seguridad contra arco eléctrico y calzado dieléctrico.',
+                            'Guantes de carnaza para soldadura y gorra metálica.',
+                            'Lentes oscuros comunes y calzado deportivo con suela de goma común.',
+                            'Únicamente bata de laboratorio de algodón.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 5: Orden, limpieza y verificación del montaje (15 pts: 8 + 7)
+                    {
+                        criterio: 'Orden, limpieza y verificación del montaje',
+                        puntos: 8,
+                        texto: 'Antes de energizar por primera vez un tablero recién montado, ¿qué instrumento y prueba se utiliza para verificar que no existan cortocircuitos ni fallas de aislamiento entre fases y tierra?',
+                        opciones: [
+                            'Multímetro en escala de continuidad y megóhmetro para resistencia de aislamiento (con el circuito desenergizado).',
+                            'Vatímetro trifásico con el motor a plena carga.',
+                            'Tacómetro óptico aplicado al eje del motor.',
+                            'Termómetro infrarrojo antes de conectar los cables.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Orden, limpieza y verificación del montaje',
+                        puntos: 7,
+                        texto: 'Al finalizar el montaje en taller, quedan restos de aislante pelado, recortes de cobre y virutas metálicas en el fondo del gabinete. ¿Por qué es crítico limpiar el tablero antes de cerrarlo?',
+                        opciones: [
+                            'Porque las virutas metálicas pueden provocar cortocircuitos entre barras o dañar contactos móviles.',
+                            'Únicamente por estética visual ante el docente.',
+                            'Porque los restos de PVC absorben humedad y aumentan la frecuencia de red.',
+                            'No es necesario limpiar si la puerta del tablero tiene llave.'
+                        ],
+                        correcta: 0
+                    }
+                ]
+            },
+
+            {
+                id: 'proyectos',
+                numero: 3,
+                nombre: 'Elaboración de Proyectos',
+                icono: 'fa-clipboard-list',
+                objetivo: 'Evaluar la capacidad para identificar problemas técnicos, formular objetivos, proponer soluciones y organizar proyectos de electricidad industrial.',
+                instrucciones: 'Resuelve los siguientes casos prácticos relacionados con planificación, formulación técnica y presupuestos de proyectos eléctricos.',
+                recomendacionBase: 'Desarrollar habilidades de diagnóstico de problemas técnicos, formulación coherente de objetivos y cálculo de presupuestos de materiales.',
+                preguntas: [
+                    // Criterio 1: Identificación y análisis de problemas (20 pts: 10 + 10)
+                    {
+                        criterio: 'Identificación y análisis de problemas',
+                        puntos: 10,
+                        texto: 'En un taller de carpintería industrial, los motores de las sierras sufren disparos frecuentes de sus protecciones y caídas de tensión notables al arrancar. ¿Cuál es el diagnóstico técnico más probable del problema?',
+                        opciones: [
+                            'Excesiva corriente de arranque directo sumada a conductores subdimensionados o falta de arranque suave/estrella-triángulo.',
+                            'Exceso de iluminación LED en el área administrativa.',
+                            'Uso de canaletas plásticas en lugar de tubería metálica.',
+                            'Frecuencia eléctrica superior a 60 Hz en la red pública.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Identificación y análisis de problemas',
+                        puntos: 10,
+                        texto: 'Al elaborar el diagnóstico de un proyecto de mejora eléctrica en una planta procesadora, ¿qué información técnica debes recopilar primero?',
+                        opciones: [
+                            'Levantamiento de cargas instaladas, estado de tableros, demanda de potencia y condiciones de seguridad.',
+                            'El color de pintura exterior de las paredes del edificio.',
+                            'La lista de precios de muebles de oficina.',
+                            'El horario de descanso del personal administrativo.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 2: Formulación de objetivos (15 pts: 8 + 7)
+                    {
+                        criterio: 'Formulación de objetivos',
+                        puntos: 8,
+                        texto: '¿Cuál de los siguientes enunciados corresponde correctamente a un OBJETIVO GENERAL de un proyecto socioproductivo de Electricidad Industrial?',
+                        opciones: [
+                            'Implementar un sistema automatizado de bombeo de agua con control de nivel para optimizar el suministro en el CEA Villa Armonía.',
+                            'Comprar tres contactores de 220V y diez metros de cable número 12.',
+                            'Pelar los cables utilizando un alicate pelacables en el taller.',
+                            'Aprobar el módulo de automatización industrial.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Formulación de objetivos',
+                        puntos: 7,
+                        texto: '¿Qué función cumplen los OBJETIVOS ESPECÍFICOS dentro de la estructura de un proyecto técnico?',
+                        opciones: [
+                            'Detallar los pasos operativos y verificables necesarios para alcanzar el objetivo general (diseñar, montar, probar).',
+                            'Reemplazar la justificación económica del proyecto.',
+                            'Describir únicamente los antecedentes históricos de la electricidad.',
+                            'Listar los nombres de los proveedores de ferretería.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 3: Propuesta de solución técnica (25 pts: 13 + 12)
+                    {
+                        criterio: 'Propuesta de solución técnica',
+                        puntos: 13,
+                        texto: 'Una bomba trifásica de 15 HP debe operar evitando picos elevados de corriente en el arranque y sin requerir variador de frecuencia por presupuesto limitado. ¿Qué solución técnica propondrías en tu proyecto?',
+                        opciones: [
+                            'Tablero de arranque Estrella - Triángulo automatizado con temporizador y protección térmica.',
+                            'Arranque directo mediante un interruptor manual tipo cuchilla.',
+                            'Conexión de la bomba a un tomacorriente monofásico domiciliario.',
+                            'Instalación de tres fusibles sin contactor ni relé térmico.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Propuesta de solución técnica',
+                        puntos: 12,
+                        texto: 'En un proyecto de iluminación para una nave industrial de gran altura con alto encendido continuo, ¿qué criterio técnico justifica seleccionar luminarias LED industriales de alta eficiencia?',
+                        opciones: [
+                            'Menor consumo energético, mayor vida útil, bajo mantenimiento y mejor flujo luminoso (lúmenes/vatio).',
+                            'Porque generan mayor calor ambiental en verano.',
+                            'Porque requieren reactancias electromagnéticas pesadas.',
+                            'Porque funcionan únicamente con corriente continua de baterías.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 4: Identificación de materiales, herramientas y recursos (20 pts: 10 + 10)
+                    {
+                        criterio: 'Identificación de materiales, herramientas y recursos',
+                        puntos: 10,
+                        texto: 'Para ejecutar un circuito derivado de tomacorrientes industriales monofásicos de 20 A con puesta a tierra, ¿qué conjunto de materiales es técnicamente indispensable?',
+                        opciones: [
+                            'Interruptor termomagnético bipolar de 20 A, interruptor diferencial 30 mA, conductor 12 AWG (fase, neutro y tierra) y ducto.',
+                            'Conductor mellizo #18 AWG, cinta aislante y un fusible de 5 A.',
+                            'Contactor tripolar de 100 A y cable desnudo de aluminio.',
+                            'Interruptor unipolar de 6 A y cable telefónico multipar.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Identificación de materiales, herramientas y recursos',
+                        puntos: 10,
+                        texto: 'Dentro de la matriz de recursos de un proyecto eléctrico, ¿cómo se clasifican los instrumentos como el multímetro, pinza amperimétrica y taladro percutor?',
+                        opciones: [
+                            'Herramientas y equipos de trabajo.',
+                            'Materiales consumibles de instalación.',
+                            'Recursos financieros directos.',
+                            'Gastos administrativos.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 5: Planificación, presupuesto y presentación (20 pts: 10 + 10)
+                    {
+                        criterio: 'Planificación, presupuesto y presentación',
+                        puntos: 10,
+                        texto: 'Ejercicio de presupuesto básico: Para un tablero requieres 2 contactores a Bs. 180 c/u, 1 relé térmico a Bs. 140 y 15 metros de cable a Bs. 8 el metro. Si agregas un 10% para imprevistos sobre el subtotal de materiales, ¿cuál es el costo total?',
+                        opciones: [
+                            'Bs. 682,00 (Subtotal Bs. 620 + Bs. 62 de imprevistos).',
+                            'Bs. 620,00 exactos.',
+                            'Bs. 500,00.',
+                            'Bs. 740,00.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Planificación, presupuesto y presentación',
+                        puntos: 10,
+                        texto: '¿Cuál es el orden cronológico correcto de las fases para ejecutar un proyecto técnico eléctrico?',
+                        opciones: [
+                            'Diagnóstico → Diseño y cálculos → Presupuesto → Ejecución/Montaje → Pruebas y entrega.',
+                            'Presupuesto → Ejecución/Montaje → Diagnóstico → Diseño y cálculos.',
+                            'Pruebas y entrega → Compras → Diagnóstico → Diseño.',
+                            'Ejecución/Montaje → Presupuesto → Pruebas → Diagnóstico.'
+                        ],
+                        correcta: 0
+                    }
+                ]
+            },
+
+            {
+                id: 'planos',
+                numero: 4,
+                nombre: 'Interpretación de Planos',
+                icono: 'fa-drafting-compass',
+                objetivo: 'Evaluar la capacidad para leer e interpretar planos unifilares, multifilares y diagramas eléctricos industriales.',
+                instrucciones: 'Observa detenidamente los planos y diagramas eléctricos presentados para responder cada pregunta técnica.',
+                recomendacionBase: 'Practicar la lectura de planos unifilares y multifilares, identificación de calibres de conductores y seguimiento de circuitos de mando y fuerza.',
+                preguntas: [
+                    // Criterio 1: Reconocimiento de simbología eléctrica en planos (20 pts: 10 + 10)
+                    {
+                        criterio: 'Reconocimiento de simbología eléctrica',
+                        puntos: 10,
+                        texto: 'Observa el siguiente plano unifilar simplificado. ¿Qué representa el símbolo ubicado en el extremo derecho del circuito C1?',
+                        svg: DIAGRAMS.planoUnifilar,
+                        caption: 'Figura 4.1: Plano unifilar de distribución básica.',
+                        opciones: [
+                            'Un punto de iluminación (luminaria).',
+                            'Un motor trifásico de inducción.',
+                            'Un tomacorriente doble con toma de tierra.',
+                            'Un transformador de corriente.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Reconocimiento de simbología eléctrica',
+                        puntos: 10,
+                        texto: '¿Qué dispositivo representa el siguiente símbolo gráfico normalizado?',
+                        svg: DIAGRAMS.disyuntor,
+                        caption: 'Figura 4.2: Símbolo de maniobra y protección.',
+                        opciones: [
+                            'Interruptor automático magnetotérmico (disyuntor).',
+                            'Pulsador de marcha con retorno por resorte.',
+                            'Bobina de temporizador a la conexión.',
+                            'Condensador de corrección de factor de potencia.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 2: Identificación de componentes y dispositivos (15 pts: 8 + 7)
+                    {
+                        criterio: 'Identificación de componentes y dispositivos',
+                        puntos: 8,
+                        texto: 'En el plano unifilar de la Figura 4.1, ¿qué función cumple el dispositivo rotulado como "IGA" ubicado inmediatamente después del medidor kWh?',
+                        opciones: [
+                            'Interruptor General Automático: protege toda la instalación contra sobrecargas y cortocircuitos.',
+                            'Interruptor de encendido exclusivo de una lámpara.',
+                            'Medidor auxiliar de energía reactiva.',
+                            'Relé de control de nivel de agua.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Identificación de componentes y dispositivos',
+                        puntos: 7,
+                        texto: 'En un plano multifilar de automatización, la designación "KM2" corresponde a:',
+                        opciones: [
+                            'El segundo contactor principal de potencia.',
+                            'El segundo fusible de protección.',
+                            'El segundo pulsador de parada.',
+                            'La segunda lámpara de señalización.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 3: Interpretación de circuitos eléctricos (25 pts: 13 + 12)
+                    {
+                        criterio: 'Interpretación de circuitos eléctricos',
+                        puntos: 13,
+                        texto: 'Observa el diagrama de fuerza de arranque Estrella-Triángulo (Figura 4.3). Según la nota técnica del plano, ¿por qué KM2 y KM3 nunca deben actuar al mismo tiempo?',
+                        svg: DIAGRAMS.estrellaTriangulo,
+                        caption: 'Figura 4.3: Esquema de fuerza Estrella - Triángulo.',
+                        opciones: [
+                            'Porque KM2 realiza el puente estrella y KM3 conecta en triángulo; activarlos juntos provocaría un cortocircuito franco trifásico.',
+                            'Porque ambos controlan motores ubicados en edificios diferentes.',
+                            'Porque KM2 funciona con corriente alterna y KM3 con corriente continua.',
+                            'Porque el motor se detendría suavemente sin consumir corriente.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Interpretación de circuitos eléctricos',
+                        puntos: 12,
+                        texto: '¿Cuál es la diferencia fundamental entre un plano UNIFILAR y un plano MULTIFILAR?',
+                        opciones: [
+                            'El unifilar representa todos los conductores de un tramo con una sola línea (indicando su cantidad con trazos), mientras el multifilar dibuja cada conductor por separado.',
+                            'El unifilar solo se usa en electrónica y el multifilar solo en alta tensión.',
+                            'El unifilar no utiliza simbología normalizada.',
+                            'No existe diferencia; ambos muestran exactamente el mismo número de líneas.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 4: Identificación de conexiones y conductores (20 pts: 10 + 10)
+                    {
+                        criterio: 'Identificación de conexiones y conductores',
+                        puntos: 10,
+                        texto: 'De acuerdo con el plano unifilar de la Figura 4.1, ¿qué sección de conductor corresponde al circuito C3 destinado al motor (M)?',
+                        opciones: [
+                            '4.0 mm²',
+                            '1.5 mm²',
+                            '2.5 mm²',
+                            '0.75 mm²'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Identificación de conexiones y conductores',
+                        puntos: 10,
+                        texto: 'En un plano de instalación eléctrica, ¿qué indica la nomenclatura "3x4 mm² + T (PE)" junto a una canalización?',
+                        opciones: [
+                            'Tres conductores activos de 4 mm² de sección más un conductor de puesta a tierra de protección.',
+                            'Tres tubos de 4 metros de longitud cada uno.',
+                            'Tres interruptores de 4 amperios conectados en serie.',
+                            'Un cable coaxial de 34 milímetros de diámetro.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 5: Análisis integral del plano (20 pts: 10 + 10)
+                    {
+                        criterio: 'Análisis integral del plano',
+                        puntos: 10,
+                        texto: 'Al revisar un plano de tablero, detectas un circuito de tomacorrientes de fuerza de 25 A protegido por un interruptor automático de 25 A, pero cableado con conductor de 1.5 mm² (capacidad máxima ~15 A). ¿Qué error grave presenta el plano?',
+                        opciones: [
+                            'El conductor está subdimensionado respecto a la protección; puede sobrecalentarse y quemarse antes de que dispare el termomagnético.',
+                            'El interruptor automático es demasiado pequeño para el cable.',
+                            'El plano está correcto porque el cobre soporta cualquier corriente sin calentar.',
+                            'Falta agregar un pulsador de marcha en cada tomacorriente.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Análisis integral del plano',
+                        puntos: 10,
+                        texto: 'En la lectura integral de un plano industrial, ¿para qué sirve el cajetín o rótulo ubicado en la esquina inferior derecha?',
+                        opciones: [
+                            'Identificar el título del proyecto, escala, fecha, código del plano, simbología de referencia y responsables técnicos.',
+                            'Indicar únicamente el precio de venta del terreno.',
+                            'Mostrar el manual de instrucciones del multímetro.',
+                            'Registrar la asistencia diaria de los trabajadores.'
+                        ],
+                        correcta: 0
+                    }
+                ]
+            },
+
+            {
+                id: 'colaborativo',
+                numero: 5,
+                nombre: 'Trabajo Colaborativo',
+                icono: 'fa-users-cog',
+                objetivo: 'Identificar tus disposiciones, criterios de comunicación, responsabilidad y toma de decisiones al enfrentar situaciones prácticas de trabajo en equipo.',
+                instrucciones: 'Esta prueba evalúa tus decisiones declaradas ante casos hipotéticos de trabajo en equipo en el taller. Selecciona la actuación que mejor refleja tu criterio colaborativo.',
+                recomendacionBase: 'Fortalecer la comunicación asertiva, la responsabilidad compartida y la resolución constructiva de desacuerdos técnicos en equipos de trabajo.',
+                preguntas: [
+                    // Criterio 1: Participación activa (20 pts: 10 + 10)
+                    {
+                        criterio: 'Participación activa',
+                        puntos: 10,
+                        texto: 'Al iniciar una práctica grupal de montaje de un tablero eléctrico en el taller, ¿cuál es tu actitud habitual frente al equipo?',
+                        opciones: [
+                            'Propongo revisar juntos el esquema, aportar ideas para distribuir tareas y asumir activamente una parte del trabajo.',
+                            'Espero en silencio hasta que mis compañeros terminen todo el montaje.',
+                            'Tomo todas las herramientas y hago el trabajo solo sin consultar a nadie.',
+                            'Me dedico a conversar de otros temas mientras el grupo avanza.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Participación activa',
+                        puntos: 10,
+                        texto: 'El equipo debe tomar una decisión técnica sobre cómo organizar el cableado en una canaleta. ¿Cómo participas?',
+                        opciones: [
+                            'Escucho las propuestas, comparto mi criterio técnico fundamentado y ayudo a llegar a un consenso.',
+                            'Impongo mi idea sin escuchar las alternativas de los demás.',
+                            'Digo que me da igual cualquier opción para evitar pensar.',
+                            'Critico las ideas de los demás sin ofrecer ninguna solución.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 2: Comunicación y expresión de ideas (15 pts: 8 + 7)
+                    {
+                        criterio: 'Comunicación y expresión de ideas',
+                        puntos: 8,
+                        texto: 'Notas que un compañero está conectando erróneamente la bobina de un contactor a 380V cuando es de 220V. ¿Cómo se lo comunicas?',
+                        opciones: [
+                            'Con respeto y claridad, le muestro la etiqueta de la bobina y el esquema para corregir juntos la conexión antes de energizar.',
+                            'Me río de su error frente a todo el curso.',
+                            'No le digo nada para que se queme la bobina y aprenda.',
+                            'Le quito el destornillador bruscamente sin explicarle el motivo.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Comunicación y expresión de ideas',
+                        puntos: 7,
+                        texto: 'Cuando debes explicar a tu grupo una parte del funcionamiento de un circuito que diseñaste, prefieres:',
+                        opciones: [
+                            'Apoyarte en el diagrama, usar términos técnicos claros y verificar si tus compañeros comprendieron.',
+                            'Hablar muy rápido para terminar pronto sin responder preguntas.',
+                            'Leer un texto sin explicar cómo se aplica en la práctica.',
+                            'Pedir que nadie te pregunte nada.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 3: Responsabilidad y cumplimiento de tareas (20 pts: 10 + 10)
+                    {
+                        criterio: 'Responsabilidad y cumplimiento de tareas',
+                        puntos: 10,
+                        texto: 'Te asignan elaborar la lista de materiales y el esquema de mando de un proyecto grupal para la siguiente clase. ¿Cómo organizas tu trabajo?',
+                        opciones: [
+                            'Planifico mi tiempo, realizo el esquema con cuidado, verifico los datos y lo entrego puntualmente al equipo.',
+                            'Lo hago cinco minutos antes de entrar a clases sin revisar.',
+                            'Olvido la tarea y culpo a otro compañero por no recordármelo.',
+                            'Copio cualquier diagrama de internet sin verificar si sirve para el proyecto.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Responsabilidad y cumplimiento de tareas',
+                        puntos: 10,
+                        texto: 'Si cometes un error durante el cableado de una sección asignada a ti dentro del equipo, ¿cómo actúas?',
+                        opciones: [
+                            'Reconozco el error con honestidad, aviso al equipo y procedo a corregirlo siguiendo las normas técnicas.',
+                            'Oculto el cable mal conectado con cinta aislante para que nadie lo note.',
+                            'Culpo al compañero que trabajó en la sección vecina.',
+                            'Abandono el puesto de trabajo sin avisar.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 4: Cooperación y apoyo mutuo (20 pts: 10 + 10)
+                    {
+                        criterio: 'Cooperación y apoyo mutuo',
+                        puntos: 10,
+                        texto: 'Un compañero del equipo tiene dificultades para interpretar el contacto de enclavamiento y se atrasa en su conexión. ¿Qué harías?',
+                        opciones: [
+                            'Me acerco a explicarle con paciencia el funcionamiento y le apoyo para que logre realizarlo correctamente.',
+                            'Lo ignoro porque cada quien debe resolver sus propios problemas.',
+                            'Le pido al docente que lo saque del grupo inmediatamente.',
+                            'Hago su parte de mala gana y me quejo todo el tiempo.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Cooperación y apoyo mutuo',
+                        puntos: 10,
+                        texto: 'Ya terminaste tu tarea individual dentro del montaje grupal, pero otro subgrupo aún está ordenando los conductores. ¿Cuál es tu reacción?',
+                        opciones: [
+                            'Ofrezco mi ayuda para colaborar en la verificación final y limpieza del área de trabajo.',
+                            'Me siento a revisar mi celular mientras los demás siguen trabajando.',
+                            'Guardo mis herramientas y me retiro del taller sin despedirme.',
+                            'Les apuro gritando para que terminen rápido.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 5: Respeto y resolución de conflictos (15 pts: 8 + 7)
+                    {
+                        criterio: 'Respeto y resolución de conflictos',
+                        puntos: 8,
+                        texto: 'En el equipo surgen dos opiniones opuestas sobre cómo ubicar los componentes en el tablero y la discusión se vuelve tensa. ¿Cómo actuarías?',
+                        opciones: [
+                            'Propongo mantener la calma, analizar las ventajas técnicas y de seguridad de cada opción y elegir la más funcional.',
+                            'Alzo la voz para imponer mi postura por encima de los demás.',
+                            'Dejo de hablarle al compañero que opina diferente.',
+                            'Me retiro de la discusión y dejo que discutan solos.'
+                        ],
+                        correcta: 0
+                    },
+                    {
+                        criterio: 'Respeto y resolución de conflictos',
+                        puntos: 7,
+                        texto: 'Un integrante del grupo no está cumpliendo con su responsabilidad acordada y retrasa la entrega del proyecto. ¿Qué solución propondrías?',
+                        opciones: [
+                            'Dialogar respetuosamente con él para conocer el motivo, recordarle el compromiso grupal y reajustar tareas de forma equitativa.',
+                            'Insultarlo frente al grupo para presionarlo.',
+                            'Eliminar su nombre del trabajo sin haber conversado previamente con él.',
+                            'Dejar que el proyecto fracase para darle una lección.'
+                        ],
+                        correcta: 0
+                    },
+                    // Criterio 6: Organización y cumplimiento de objetivos grupales (10 pts: 10)
+                    {
+                        criterio: 'Organización y cumplimiento de objetivos grupales',
+                        puntos: 10,
+                        texto: 'Para que un equipo de trabajo logre completar con éxito el montaje y prueba de un proyecto eléctrico en el tiempo establecido, ¿qué factor consideras fundamental?',
+                        opciones: [
+                            'Definir roles claros, respetar las normas de seguridad, mantener comunicación constante y verificar juntos el resultado final.',
+                            'Que una sola persona haga todo mientras los demás observan.',
+                            'Trabajar sin planificación ni división de tareas para ahorrar tiempo.',
+                            'Priorizar la rapidez por encima de la seguridad y el orden técnico.'
+                        ],
+                        correcta: 0
+                    }
+                ]
+            }
+        ];
+
+        /* =====================================================================
+           3. ESTADO GLOBAL Y GESTIÓN DE ALMACENAMIENTO (localStorage)
+        ====================================================================== */
+        const STORAGE_KEY = 'cea_villa_armonia_diag_2027_v1';
+
+        let appState = {
+            estudiante: null, // { apellidos, nombres, ci, especialidad, nivel, gestion, fecha }
+            modulos: {
+                esquemas: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                montaje: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                proyectos: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                planos: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                colaborativo: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null }
+            },
+            moduloActivoId: null,
+            preguntaActualIdx: 0
+        };
+
+        let chartInstance = null;
+
+        // Cargar estado guardado al iniciar
+        function cargarEstado() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.modulos) {
+                        appState = parsed;
+                    }
+                }
+            } catch (e) {
+                console.error('Error al leer localStorage:', e);
+            }
+        }
+
+        // Guardar estado en localStorage
+        function guardarEstado() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('Error al guardar en localStorage:', e);
+            }
+        }
+
+        // Verificar integridad de puntuaciones (exactamente 100 pts por módulo)
+        function verificarIntegridadBanco() {
+            MODULES.forEach(mod => {
+                const suma = mod.preguntas.reduce((acc, q) => acc + q.puntos, 0);
+                if (suma !== 100) {
+                    console.warn(`Advertencia: El módulo ${mod.nombre} suma ${suma} puntos en lugar de 100.`);
+                }
+            });
+        }
+
+        /* =====================================================================
+           4. SISTEMA DE MODALES PERSONALIZADOS (Reemplazo de alert y confirm)
+        ====================================================================== */
+        function mostrarModal({ titulo, mensaje, tipo = 'info', textoConfirmar = 'Aceptar', mostrarCancelar = false, onConfirm = null }) {
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('modal-title');
+            const msgEl = document.getElementById('modal-message');
+            const iconEl = document.getElementById('modal-icon');
+            const btnCancel = document.getElementById('modal-btn-cancel');
+            const btnConfirm = document.getElementById('modal-btn-confirm');
+
+            titleEl.textContent = titulo;
+            msgEl.textContent = mensaje;
+            btnConfirm.textContent = textoConfirmar;
+
+            if (tipo === 'warning') {
+                iconEl.className = 'fas fa-exclamation-triangle text-cea-gold text-xl';
+            } else if (tipo === 'success') {
+                iconEl.className = 'fas fa-check-circle text-emerald-400 text-xl';
+            } else {
+                iconEl.className = 'fas fa-info-circle text-cea-gold text-xl';
+            }
+
+            if (mostrarCancelar) {
+                btnCancel.classList.remove('hidden');
+            } else {
+                btnCancel.classList.add('hidden');
+            }
+
+            btnConfirm.onclick = () => {
+                cerrarModal();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        /* =====================================================================
+           5. NAVEGACIÓN ENTRE VISTAS Y REGISTRO DEL ESTUDIANTE
+        ====================================================================== */
+        function mostrarVista(viewId) {
+            const views = ['view-welcome', 'view-register', 'view-dashboard', 'view-quiz', 'view-results'];
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if (v === viewId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            actualizarHeaderEstudiante();
+        }
+
+        function actualizarHeaderEstudiante() {
+            const infoBox = document.getElementById('header-student-info');
+            if (appState.estudiante) {
+                infoBox.classList.remove('hidden');
+                document.getElementById('header-student-name').textContent = `${appState.estudiante.apellidos}, ${appState.estudiante.nombres}`;
+                document.getElementById('header-student-ci').textContent = `C.I.: ${appState.estudiante.ci}`;
+            } else {
+                infoBox.classList.add('hidden');
+            }
+        }
+
+        function irARegistro() {
+            if (appState.estudiante) {
+                renderizarDashboard();
+                mostrarVista('view-dashboard');
+                return;
+            }
+            // Establecer fecha actual por defecto
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('reg-fecha').value = hoy;
+            mostrarVista('view-register');
+        }
+
+        function guardarRegistro(e) {
+            e.preventDefault();
+            const apellidos = document.getElementById('reg-apellidos').value.trim();
+            const nombres = document.getElementById('reg-nombres').value.trim();
+            const ci = document.getElementById('reg-ci').value.trim();
+            const fecha = document.getElementById('reg-fecha').value;
+
+            if (!apellidos || !nombres || !ci || !fecha) {
+                mostrarModal({
+                    titulo: 'Campos Obligatorios Incompletos',
+                    mensaje: 'Por favor completa tus apellidos, nombres, número de cédula de identidad y fecha de evaluación antes de continuar.',
+                    tipo: 'warning'
+                });
+                return;
+            }
+
+            appState.estudiante = {
+                apellidos,
+                nombres,
+                ci,
+                especialidad: 'Electricidad Industrial',
+                nivel: 'Técnico Medio',
+                gestion: '2027',
+                fecha
+            };
+
+            guardarEstado();
+            renderizarDashboard();
+            mostrarVista('view-dashboard');
+        }
+
+        function confirmarReinicio() {
+            mostrarModal({
+                titulo: '¿Reiniciar Evaluación Diagnóstica?',
+                mensaje: 'Esta acción borrará todos tus datos registrados y las respuestas guardadas hasta el momento para iniciar una nueva evaluación desde cero. ¿Deseas continuar?',
+                tipo: 'warning',
+                textoConfirmar: 'Sí, reiniciar todo',
+                mostrarCancelar: true,
+                onConfirm: () => {
+                    localStorage.removeItem(STORAGE_KEY);
+                    appState = {
+                        estudiante: null,
+                        modulos: {
+                            esquemas: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                            montaje: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                            proyectos: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                            planos: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null },
+                            colaborativo: { estado: 'pendiente', respuestas: {}, puntaje: null, nivel: null }
+                        },
+                        moduloActivoId: null,
+                        preguntaActualIdx: 0
+                    };
+                    document.getElementById('student-form').reset();
+                    mostrarVista('view-welcome');
+                }
+            });
+        }
+
+        /* =====================================================================
+           6. PANEL DE PROGRESO Y NAVEGACIÓN SECUENCIAL DE MÓDULOS
+        ====================================================================== */
+        function calcularNivelDesarrollo(puntaje) {
+            if (puntaje >= 90) return { codigo: 'DP', nombre: 'Desarrollo Pleno', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+            if (puntaje >= 75) return { codigo: 'DO', nombre: 'Desarrollo Óptimo', color: 'bg-blue-100 text-blue-800 border-blue-300' };
+            if (puntaje >= 51) return { codigo: 'DA', nombre: 'Desarrollo Aceptable', color: 'bg-amber-100 text-amber-800 border-amber-300' };
+            return { codigo: 'ED', nombre: 'En Desarrollo', color: 'bg-red-100 text-red-800 border-red-300' };
+        }
+
+        function renderizarDashboard() {
+            const grid = document.getElementById('modules-grid');
+            grid.innerHTML = '';
+
+            let completadas = 0;
+
+            MODULES.forEach((mod, index) => {
+                const modState = appState.modulos[mod.id];
+                if (modState.estado === 'completada') completadas++;
+
+                // Regla secuencial: se habilita si es el primero o si el anterior está completado
+                const anteriorCompletado = index === 0 || appState.modulos[MODULES[index - 1].id].estado === 'completada';
+                const bloqueado = !anteriorCompletado && modState.estado === 'pendiente';
+
+                let badgeHtml = '';
+                let btnHtml = '';
+                let cardBorder = 'border-slate-200';
+
+                if (modState.estado === 'completada') {
+                    cardBorder = 'border-emerald-400';
+                    const nivelInfo = calcularNivelDesarrollo(modState.puntaje);
+                    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><i class="fas fa-check-circle"></i> Completada</span>`;
+                    btnHtml = `
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-500 block">Calificación:</span>
+                                <span class="text-lg font-extrabold text-cea-blue">${modState.puntaje} / 100 pts</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-md text-xs font-extrabold border ${nivelInfo.color}" title="${nivelInfo.nombre}">
+                                ${nivelInfo.codigo} - ${nivelInfo.nombre}
+                            </span>
+                        </div>
+                    `;
+                } else if (modState.estado === 'en_proceso') {
+                    cardBorder = 'border-cea-gold';
+                    const respondidas = Object.keys(modState.respuestas).length;
+                    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><i class="fas fa-spinner fa-spin"></i> En proceso (${respondidas}/${mod.preguntas.length})</span>`;
+                    btnHtml = `
+                        <button onclick="iniciarModulo('${mod.id}')" class="mt-4 w-full py-2.5 px-4 rounded-xl bg-cea-gold hover:bg-cea-goldDark text-cea-blue font-extrabold text-xs uppercase tracking-wide transition flex items-center justify-center gap-2 shadow cursor-pointer">
+                            <span>Continuar Prueba</span> <i class="fas fa-play"></i>
+                        </button>
+                    `;
+                } else if (!bloqueado) {
+                    cardBorder = 'border-cea-blue/40';
+                    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-cea-blue"><i class="fas fa-unlock"></i> Disponible</span>`;
+                    btnHtml = `
+                        <button onclick="iniciarModulo('${mod.id}')" class="mt-4 w-full py-2.5 px-4 rounded-xl bg-cea-blue hover:bg-cea-blueLight text-white font-bold text-xs uppercase tracking-wide transition flex items-center justify-center gap-2 shadow cursor-pointer">
+                            <span>Iniciar Prueba ${mod.numero}</span> <i class="fas fa-arrow-right text-cea-gold"></i>
+                        </button>
+                    `;
+                } else {
+                    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500"><i class="fas fa-lock"></i> Pendiente</span>`;
+                    btnHtml = `
+                        <button disabled class="mt-4 w-full py-2.5 px-4 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs uppercase tracking-wide cursor-not-allowed flex items-center justify-center gap-2">
+                            <i class="fas fa-lock"></i> <span>Completa la prueba anterior</span>
+                        </button>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl shadow-md border-2 ${cardBorder} p-5 flex flex-col justify-between transition hover:shadow-lg`;
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-cea-blue text-cea-gold flex items-center justify-center text-lg shadow-sm">
+                                <i class="fas ${mod.icono}"></i>
+                            </div>
+                            ${badgeHtml}
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Capacidad ${mod.numero} de 5</span>
+                        <h3 class="text-lg font-extrabold text-cea-blue mt-0.5">${mod.nombre}</h3>
+                        <p class="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">${mod.objetivo}</p>
+                        <div class="mt-3 flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+                            <span><i class="fas fa-list-ol text-cea-goldDark mr-1"></i> ${mod.preguntas.length} preguntas</span>
+                            <span>•</span>
+                            <span><i class="fas fa-star text-cea-goldDark mr-1"></i> 100 puntos</span>
+                        </div>
+                    </div>
+                    ${btnHtml}
+                `;
+                grid.appendChild(card);
+            });
+
+            // Actualizar barra general
+            const pct = Math.round((completadas / MODULES.length) * 100);
+            document.getElementById('dashboard-progress-text').textContent = `${completadas} de 5 Completadas (${pct}%)`;
+            document.getElementById('dashboard-progress-bar').style.width = `${pct}%`;
+
+            // Habilitar o bloquear botón de Informe Final
+            const btnFinal = document.getElementById('btn-view-final-results');
+            const btnIcon = document.getElementById('btn-final-icon');
+            const hint = document.getElementById('final-report-hint');
+
+            if (completadas === MODULES.length) {
+                btnFinal.disabled = false;
+                btnFinal.className = 'w-full sm:w-auto px-6 py-3.5 rounded-xl font-extrabold text-sm transition flex items-center justify-center gap-2 bg-cea-gold hover:bg-cea-goldDark text-cea-blue shadow-lg cursor-pointer';
+                btnIcon.className = 'fas fa-file-pdf';
+                hint.textContent = '¡Has completado las 5 capacidades! Ya puedes visualizar y descargar tu informe individual en PDF.';
+            } else {
+                btnFinal.disabled = true;
+                btnFinal.className = 'w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-slate-200 text-slate-400 cursor-not-allowed';
+                btnIcon.className = 'fas fa-lock';
+                hint.textContent = `Te faltan ${MODULES.length - completadas} prueba(s) para desbloquear tu informe en PDF.`;
+            }
+        }
+
+        function volverAlPanel() {
+            appState.moduloActivoId = null;
+            guardarEstado();
+            renderizarDashboard();
+            mostrarVista('view-dashboard');
+        }
+
+        /* =====================================================================
+           7. EJECUCIÓN DE CADA PRUEBA (NAVEGACIÓN, RESPUESTAS Y ENTREGA)
+        ====================================================================== */
+        function iniciarModulo(modId) {
+            const modState = appState.modulos[modId];
+            if (modState.estado === 'completada') {
+                mostrarModal({
+                    titulo: 'Prueba ya entregada',
+                    mensaje: 'Esta capacidad ya fue evaluada y calificada. No es posible modificar las respuestas una vez entregada la prueba.',
+                    tipo: 'info'
+                });
+                return;
+            }
+
+            if (modState.estado === 'pendiente') {
+                modState.estado = 'en_proceso';
+            }
+
+            appState.moduloActivoId = modId;
+            appState.preguntaActualIdx = 0;
+            guardarEstado();
+
+            renderizarPreguntaActual();
+            mostrarVista('view-quiz');
+        }
+
+        function renderizarPreguntaActual() {
+            const mod = MODULES.find(m => m.id === appState.moduloActivoId);
+            if (!mod) return;
+
+            const modState = appState.modulos[mod.id];
+            const idx = appState.preguntaActualIdx;
+            const pregunta = mod.preguntas[idx];
+            const totalQ = mod.preguntas.length;
+            const respondidasCount = Object.keys(modState.respuestas).length;
+
+            // Cabecera del módulo
+            document.getElementById('quiz-badge').textContent = `Capacidad ${mod.numero} de 5`;
+            document.getElementById('quiz-title').textContent = mod.nombre;
+            document.getElementById('quiz-objective').textContent = `Objetivo: ${mod.objetivo}`;
+            document.getElementById('quiz-instructions').textContent = mod.instrucciones;
+
+            // Progreso
+            document.getElementById('quiz-question-counter').textContent = `Pregunta ${idx + 1} de ${totalQ}`;
+            document.getElementById('quiz-answered-counter').textContent = `${respondidasCount} de ${totalQ} respondidas`;
+            document.getElementById('quiz-progress-bar').style.width = `${((idx + 1) / totalQ) * 100}%`;
+
+            // Detalle de pregunta
+            document.getElementById('q-criterion').textContent = `Criterio: ${pregunta.criterio}`;
+            document.getElementById('q-points').textContent = `Valor: ${pregunta.puntos} puntos`;
+            document.getElementById('q-text').textContent = `${idx + 1}. ${pregunta.texto}`;
+
+            // Diagrama SVG si existe
+            const visualBox = document.getElementById('q-visual-container');
+            if (pregunta.svg) {
+                visualBox.classList.remove('hidden');
+                document.getElementById('q-svg-content').innerHTML = pregunta.svg;
+                document.getElementById('q-svg-caption').textContent = pregunta.caption || '';
+            } else {
+                visualBox.classList.add('hidden');
+                document.getElementById('q-svg-content').innerHTML = '';
+            }
+
+            // Opciones
+            const optsContainer = document.getElementById('q-options-container');
+            optsContainer.innerHTML = '';
+            const respuestaGuardada = modState.respuestas[idx];
+            const letras = ['A', 'B', 'C', 'D'];
+
+            pregunta.opciones.forEach((opcionTexto, optIdx) => {
+                const isSelected = respuestaGuardada === optIdx;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => seleccionarRespuesta(optIdx);
+                btn.className = `option-card w-full text-left p-4 rounded-xl border-2 flex items-start gap-3.5 cursor-pointer ${
+                    isSelected ? 'option-selected' : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`;
+
+                btn.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
+                        isSelected ? 'bg-cea-blue text-cea-gold' : 'bg-slate-100 text-slate-600'
+                    }">
+                        ${letras[optIdx]}
+                    </span>
+                    <span class="text-sm sm:text-base ${isSelected ? 'font-bold text-cea-blue' : 'text-slate-700'}">
+                        ${opcionTexto}
+                    </span>
+                `;
+                optsContainer.appendChild(btn);
+            });
+
+            // Mapa de puntos numerados para revisión rápida
+            const dotsMap = document.getElementById('q-dots-map');
+            dotsMap.innerHTML = '';
+            for (let i = 0; i < totalQ; i++) {
+                const contestada = modState.respuestas[i] !== undefined;
+                const actual = i === idx;
+                const dot = document.createElement('button');
+                dot.type = 'button';
+                dot.textContent = i + 1;
+                dot.onclick = () => {
+                    appState.preguntaActualIdx = i;
+                    renderizarPreguntaActual();
+                };
+                dot.className = `w-7 h-7 rounded-md text-xs font-bold transition cursor-pointer ${
+                    actual
+                        ? 'bg-cea-blue text-cea-gold ring-2 ring-cea-gold'
+                        : contestada
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`;
+                dotsMap.appendChild(dot);
+            }
+
+            // Botones Anterior / Siguiente / Finalizar
+            document.getElementById('btn-prev-q').disabled = idx === 0;
+            const btnNext = document.getElementById('btn-next-q');
+            const btnFinish = document.getElementById('btn-finish-quiz');
+
+            if (idx === totalQ - 1) {
+                btnNext.classList.add('hidden');
+                btnFinish.classList.remove('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnFinish.classList.add('hidden');
+            }
+        }
+
+        function seleccionarRespuesta(optIdx) {
+            const modId = appState.moduloActivoId;
+            const idx = appState.preguntaActualIdx;
+            appState.modulos[modId].respuestas[idx] = optIdx;
+            guardarEstado();
+            renderizarPreguntaActual();
+        }
+
+        function preguntaAnterior() {
+            if (appState.preguntaActualIdx > 0) {
+                appState.preguntaActualIdx--;
+                renderizarPreguntaActual();
+            }
+        }
+
+        function preguntaSiguiente() {
+            const mod = MODULES.find(m => m.id === appState.moduloActivoId);
+            const modState = appState.modulos[mod.id];
+
+            // Validar que la pregunta actual esté respondida antes de avanzar
+            if (modState.respuestas[appState.preguntaActualIdx] === undefined) {
+                mostrarModal({
+                    titulo: 'Pregunta sin responder',
+                    mensaje: 'Por favor selecciona una alternativa de respuesta antes de avanzar a la siguiente pregunta.',
+                    tipo: 'warning'
+                });
+                return;
+            }
+
+            if (appState.preguntaActualIdx < mod.preguntas.length - 1) {
+                appState.preguntaActualIdx++;
+                renderizarPreguntaActual();
+            }
+        }
+
+        function solicitarEntregaPrueba() {
+            const mod = MODULES.find(m => m.id === appState.moduloActivoId);
+            const modState = appState.modulos[mod.id];
+            const totalQ = mod.preguntas.length;
+
+            // Verificar que no queden preguntas obligatorias sin responder
+            const sinResponder = [];
+            for (let i = 0; i < totalQ; i++) {
+                if (modState.respuestas[i] === undefined) {
+                    sinResponder.push(i + 1);
+                }
+            }
+
+            if (sinResponder.length > 0) {
+                mostrarModal({
+                    titulo: 'Preguntas Pendientes',
+                    mensaje: `Aún tienes preguntas sin responder (Pregunta N.º: ${sinResponder.join(', ')}). Por favor respóndelas todas antes de entregar la prueba.`,
+                    tipo: 'warning',
+                    onConfirm: () => {
+                        appState.preguntaActualIdx = sinResponder[0] - 1;
+                        renderizarPreguntaActual();
+                    }
+                });
+                return;
+            }
+
+            // Mostrar confirmación antes de entregar
+            mostrarModal({
+                titulo: `Confirmar Entrega: ${mod.nombre}`,
+                mensaje: '¿Estás seguro de finalizar y entregar esta prueba? Una vez entregada, se calculará tu puntuación automáticamente y no podrás modificar tus respuestas.',
+                tipo: 'info',
+                textoConfirmar: 'Sí, entregar prueba',
+                mostrarCancelar: true,
+                onConfirm: () => calificarYFinalizarModulo(mod)
+            });
+        }
+
+        function calificarYFinalizarModulo(mod) {
+            const modState = appState.modulos[mod.id];
+            let puntajeObtenido = 0;
+
+            mod.preguntas.forEach((q, idx) => {
+                if (modState.respuestas[idx] === q.correcta) {
+                    puntajeObtenido += q.puntos;
+                }
+            });
+
+            // Garantizar límite [0, 100]
+            puntajeObtenido = Math.min(100, Math.max(0, puntajeObtenido));
+            const nivelObj = calcularNivelDesarrollo(puntajeObtenido);
+
+            modState.estado = 'completada';
+            modState.puntaje = puntajeObtenido;
+            modState.nivel = nivelObj.codigo;
+            appState.moduloActivoId = null;
+
+            guardarEstado();
+
+            // Verificar si ya se completaron las 5 pruebas
+            const todasCompletas = MODULES.every(m => appState.modulos[m.id].estado === 'completada');
+
+            if (todasCompletas) {
+                mostrarModal({
+                    titulo: '¡Evaluación Diagnóstica Completada!',
+                    mensaje: `Has finalizado "${mod.nombre}" con ${puntajeObtenido}/100 puntos (${nivelObj.nombre}). Al haber completado las 5 pruebas, ya puedes ver tu informe final y descargarlo en PDF.`,
+                    tipo: 'success',
+                    textoConfirmar: 'Ver Informe Final',
+                    onConfirm: () => mostrarResultadosFinales()
+                });
+            } else {
+                mostrarModal({
+                    titulo: 'Prueba Calificada con Éxito',
+                    mensaje: `Has completado la prueba de "${mod.nombre}". Puntuación obtenida: ${puntajeObtenido} / 100 puntos (${nivelObj.codigo} - ${nivelObj.nombre}). Continúa con la siguiente capacidad.`,
+                    tipo: 'success',
+                    textoConfirmar: 'Continuar al Panel',
+                    onConfirm: () => {
+                        renderizarDashboard();
+                        mostrarVista('view-dashboard');
+                    }
+                });
+            }
+        }
+
+        /* =====================================================================
+           8. RESULTADOS GENERALES, ANÁLISIS PERSONALIZADO Y GRÁFICO
+        ====================================================================== */
+        function mostrarResultadosFinales() {
+            const todasCompletas = MODULES.every(m => appState.modulos[m.id].estado === 'completada');
+            if (!todasCompletas) {
+                mostrarModal({
+                    titulo: 'Evaluación Incompleta',
+                    mensaje: 'Debes completar las cinco pruebas diagnósticas antes de generar el informe final.',
+                    tipo: 'warning'
+                });
+                return;
+            }
+
+            const est = appState.estudiante;
+            document.getElementById('rep-nombre').textContent = `${est.apellidos} ${est.nombres}`;
+            document.getElementById('rep-ci').textContent = est.ci;
+            document.getElementById('rep-especialidad').textContent = `${est.especialidad} (${est.nivel})`;
+            document.getElementById('rep-fecha').textContent = formatearFecha(est.fecha);
+            document.getElementById('rep-fecha-emision').textContent = formatearFecha(new Date().toISOString().split('T')[0]);
+            document.getElementById('rep-firma-estudiante').textContent = `${est.apellidos} ${est.nombres} — C.I. ${est.ci}`;
+            document.getElementById('doc-codigo').textContent = `COD: CEA-2027-${est.ci.replace(/\s+/g, '')}`;
+
+            // Construir tabla y recopilar puntajes
+            const tbody = document.getElementById('rep-table-body');
+            tbody.innerHTML = '';
+
+            let sumaTotal = 0;
+            const resultadosArray = [];
+
+            MODULES.forEach((mod, i) => {
+                const pts = appState.modulos[mod.id].puntaje;
+                const niv = calcularNivelDesarrollo(pts);
+                sumaTotal += pts;
+
+                resultadosArray.push({
+                    id: mod.id,
+                    nombre: mod.nombre,
+                    puntaje: pts,
+                    nivel: niv,
+                    recomendacionBase: mod.recomendacionBase
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = i % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                tr.innerHTML = `
+                    <td class="border border-slate-300 px-3 py-2 text-center font-bold">${mod.numero}</td>
+                    <td class="border border-slate-300 px-3 py-2 font-semibold text-slate-800">${mod.nombre}</td>
+                    <td class="border border-slate-300 px-3 py-2 text-center font-extrabold text-cea-blue">${pts}</td>
+                    <td class="border border-slate-300 px-3 py-2 text-center text-slate-600">100</td>
+                    <td class="border border-slate-300 px-3 py-2 text-center font-semibold">${pts}%</td>
+                    <td class="border border-slate-300 px-3 py-2 text-center font-bold">
+                        <span class="px-2 py-0.5 rounded text-xs border ${niv.color}">${niv.codigo} (${niv.nombre})</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Calcular promedio general con 2 decimales
+            const promedio = (sumaTotal / MODULES.length).toFixed(2);
+            const nivelGeneral = calcularNivelDesarrollo(parseFloat(promedio));
+
+            document.getElementById('rep-promedio-pts').textContent = promedio;
+            document.getElementById('rep-promedio-pct').textContent = `${promedio}%`;
+            document.getElementById('rep-promedio-nivel').textContent = `${nivelGeneral.codigo} – ${nivelGeneral.nombre}`;
+
+            // Generar Análisis Individual (Fortalezas, Debilidades, Recomendaciones)
+            generarAnalisisPersonalizado(resultadosArray);
+
+            // Mostrar vista y renderizar gráfico
+            mostrarVista('view-results');
+            setTimeout(() => renderizarGraficoResultados(resultadosArray), 150);
+        }
+
+        function generarAnalisisPersonalizado(resultados) {
+            const ordenados = [...resultados].sort((a, b) => b.puntaje - a.puntaje);
+            const maxPuntaje = ordenados[0].puntaje;
+            const minPuntaje = ordenados[ordenados.length - 1].puntaje;
+
+            // Fortalezas (capacidades >= 75 o las mayores puntuaciones)
+            let fortalezas = ordenados.filter(r => r.puntaje >= 75);
+            if (fortalezas.length === 0) {
+                fortalezas = ordenados.filter(r => r.puntaje === maxPuntaje);
+            }
+
+            // Capacidades que requieren fortalecimiento (< 75 o las menores puntuaciones)
+            let debilidades = ordenados.filter(r => r.puntaje < 75);
+            if (debilidades.length === 0) {
+                debilidades = ordenados.filter(r => r.puntaje === minPuntaje && r.puntaje < 100);
+            }
+
+            const ulFortalezas = document.getElementById('rep-fortalezas');
+            ulFortalezas.innerHTML = '';
+            fortalezas.forEach(f => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${f.nombre}:</strong> Destacado desempeño previo (${f.puntaje}/100 pts – ${f.nivel.nombre}).`;
+                ulFortalezas.appendChild(li);
+            });
+
+            const ulDebilidades = document.getElementById('rep-debilidades');
+            ulDebilidades.innerHTML = '';
+            if (debilidades.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Excelente nivel en todas las capacidades evaluadas. Continuar profundizando en automatización industrial avanzada.';
+                ulDebilidades.appendChild(li);
+            } else {
+                debilidades.forEach(d => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${d.nombre}:</strong> Oportunidad de mejora (${d.puntaje}/100 pts – ${d.nivel.nombre}).`;
+                    ulDebilidades.appendChild(li);
+                });
+            }
+
+            // Recomendaciones adaptadas al puntaje real de cada capacidad
+            const ulRecs = document.getElementById('rep-recomendaciones');
+            ulRecs.innerHTML = '';
+            resultados.forEach(r => {
+                const li = document.createElement('li');
+                let textoAdaptado = '';
+                if (r.puntaje >= 90) {
+                    textoAdaptado = `Mantener el excelente dominio demostrado y apoyar como referente técnico en prácticas de ${r.nombre.toLowerCase()}.`;
+                } else if (r.puntaje >= 75) {
+                    textoAdaptado = `Buen nivel base; continuar consolidando la precisión técnica en ${r.nombre.toLowerCase()} mediante ejercicios aplicados.`;
+                } else {
+                    textoAdaptado = r.recomendacionBase;
+                }
+                li.innerHTML = `<i class="fas fa-check text-cea-goldDark mr-1.5"></i><strong>${r.nombre} (${r.puntaje} pts):</strong> ${textoAdaptado}`;
+                ulRecs.appendChild(li);
+            });
+        }
+
+        function renderizarGraficoResultados(resultados) {
+            const ctx = document.getElementById('resultsChart');
+            if (!ctx || typeof Chart === 'undefined') return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: resultados.map(r => r.nombre),
+                    datasets: [{
+                        label: 'Puntuación Obtenida (sobre 100 pts)',
+                        data: resultados.map(r => r.puntaje),
+                        backgroundColor: [
+                            '#0A2540',
+                            '#163A5F',
+                            '#D4AF37',
+                            '#1E40AF',
+                            '#AA8A24'
+                        ],
+                        borderColor: '#0A2540',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.55
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false, // Sin animación para captura instantánea en PDF
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20, font: { size: 11 } },
+                            grid: { color: '#E2E8F0' }
+                        },
+                        x: {
+                            ticks: { font: { size: 11, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        /* =====================================================================
+           9. GENERACIÓN Y DESCARGA DEL INFORME EN PDF (FORMATO A4)
+        ====================================================================== */
+        function descargarPDF() {
+            const est = appState.estudiante;
+            if (!est) return;
+
+            const nombreArchivo = `Informe_Diagnostico_${est.apellidos}_${est.nombres}_CEA2027.pdf`
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar tildes para nombre de archivo seguro
+                .replace(/\s+/g, '_');
+
+            const element = document.getElementById('pdf-report-container');
+            const btn = document.getElementById('btn-download-pdf');
+            const textoOriginal = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generando PDF...</span>';
+
+            if (typeof html2pdf !== 'undefined') {
+                const opt = {
+                    margin: [8, 8, 8, 8], // mm
+                    filename: nombreArchivo,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save()
+                    .then(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = textoOriginal;
+                    })
+                    .catch(err => {
+                        console.error('Error generando PDF con html2pdf:', err);
+                        btn.disabled = false;
+                        btn.innerHTML = textoOriginal;
+                        window.print(); // Respaldo nativo sin conexión
+                    });
+            } else {
+                // Alternativa funcional sin conexión a internet
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+                window.print();
+            }
+        }
+
+        function formatearFecha(isoDate) {
+            if (!isoDate) return '';
+            const partes = isoDate.split('-');
+            if (partes.length !== 3) return isoDate;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        /* =====================================================================
+           10. INICIALIZACIÓN AL CARGAR LA PÁGINA
+        ====================================================================== */
+        window.onload = function() {
+            verificarIntegridadBanco();
+            cargarEstado();
+
+            if (appState.estudiante) {
+                actualizarHeaderEstudiante();
+                if (appState.moduloActivoId) {
+                    renderizarPreguntaActual();
+                    mostrarVista('view-quiz');
+                } else {
+                    renderizarDashboard();
+                    mostrarVista('view-dashboard');
+                }
+            } else {
+                mostrarVista('view-welcome');
+            }
+        };
+    </script>
+</body>
+</html>
